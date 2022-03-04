@@ -1,4 +1,4 @@
-package models
+package repository
 
 type Skill struct {
 	Id           string `json:"id"`
