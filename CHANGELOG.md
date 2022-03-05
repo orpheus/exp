@@ -13,6 +13,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - SkillConfig Controller and CRUD
 - Skill Controller and CRUD
 - Skill.AddTxp
+- User table with login and sign up
 
 ### Changed
 ### Fixed
