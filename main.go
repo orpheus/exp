@@ -34,7 +34,6 @@ func main() {
 	defer conn.Close()
 
 	r := gin.Default()
-
 	controllers.RegisterAll(r, conn)
 
 	err = r.Run()

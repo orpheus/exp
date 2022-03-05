@@ -15,8 +15,7 @@ type SignOnController struct {
 	Auth   auth.JWTService
 }
 
-func (svc *SignOnController) RegisterRoutes() {
-	router := svc.Router.Group("/api")
+func (svc *SignOnController) RegisterRoutes(router *gin.RouterGroup) {
 	{
 		router.POST("/login", svc.Login)
 		router.POST("/signup", svc.SignUp)
@@ -72,9 +71,9 @@ func (svc *SignOnController) SignUp(c *gin.Context) {
 	fmt.Println(hashedPassword)
 	createdUser, err := svc.Repo.Create(newUser, string(hashedPassword))
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err})
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
 
-	c.IndentedJSON(http.StatusOK, createdUser)
+	c.IndentedJSON(http.StatusOK, createdUser.ToDTO())
 }

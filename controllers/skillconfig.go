@@ -12,14 +12,18 @@ type SkillConfigController struct {
 	Repo   *repository.SkillConfigRepo
 }
 
-func (s *SkillConfigController) RegisterRoutes() {
-	router := s.Router.Group("/api")
+func (s *SkillConfigController) RegisterRoutes(router *gin.RouterGroup) {
+	skillConfig := router.Group("/skillConfig")
 	{
-		router.GET("/skillConfig", s.FindAllSkillConfigs)
-		router.GET("/skillConfig/:id", s.FindSkillConfigById)
-		router.POST("/skillConfig", s.CreateSkillConfig)
-		router.POST("/skillConfigs", s.CreateSkillConfigs)
-		router.DELETE("/skillConfig/:id", s.DeleteById)
+		skillConfig.GET("/", s.FindAllSkillConfigs)
+		skillConfig.POST("/", s.CreateSkillConfig)
+		skillConfig.GET("/:id", s.FindSkillConfigById)
+		skillConfig.DELETE("/:id", s.DeleteById)
+	}
+
+	skillConfigs := router.Group("skillConfigs")
+	{
+		skillConfigs.POST("/", s.CreateSkillConfigs)
 	}
 }
 
