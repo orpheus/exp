@@ -1,9 +1,9 @@
 package controllers
 
 import (
-	"com.orpheus/exp/repository"
 	"github.com/gin-gonic/gin"
 	"github.com/jackc/pgx/v4/pgxpool"
+	"github.com/orpheus/exp/repository"
 )
 
 func RegisterAll(r *gin.Engine, conn *pgxpool.Pool) {
@@ -18,4 +18,10 @@ func RegisterAll(r *gin.Engine, conn *pgxpool.Pool) {
 		Repo:   &repository.SkillConfigRepo{DB: conn},
 	}
 	skillConfigController.RegisterRoutes()
+
+	skillController := SkillController{
+		Router: r,
+		Repo:   &repository.SkillRepo{DB: conn},
+	}
+	skillController.RegisterRoutes()
 }

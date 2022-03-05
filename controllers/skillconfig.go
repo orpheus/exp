@@ -1,9 +1,9 @@
 package controllers
 
 import (
-	"com.orpheus/exp/repository"
 	"fmt"
 	"github.com/gin-gonic/gin"
+	"github.com/orpheus/exp/repository"
 	"net/http"
 )
 
