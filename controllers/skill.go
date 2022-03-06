@@ -4,8 +4,10 @@ import (
 	"fmt"
 	"github.com/gin-gonic/gin"
 	"github.com/gofrs/uuid"
+	"github.com/jackc/pgx/v4"
 	"github.com/orpheus/exp/core"
 	"github.com/orpheus/exp/repository"
+	"github.com/pkg/errors"
 	"log"
 	"net/http"
 	"strconv"
@@ -28,8 +30,8 @@ func (s *SkillController) RegisterRoutes(router *gin.RouterGroup) {
 }
 
 func (s *SkillController) FindAllSkills(c *gin.Context) {
-	Skills := s.Repo.FindAll()
-	c.IndentedJSON(http.StatusOK, Skills)
+	skills := s.Repo.FindAll()
+	c.JSON(http.StatusOK, skills)
 }
 
 func (s *SkillController) FindSkillById(c *gin.Context) {
@@ -40,6 +42,10 @@ func (s *SkillController) FindSkillById(c *gin.Context) {
 	log.Printf("successfully parsed UUID %v", id)
 	skill, err := s.Repo.FindById(id)
 	if err != nil {
+		if errors.As(err, &pgx.ErrNoRows) {
+			c.JSON(http.StatusNotFound, fmt.Sprintf("Skill %s not found", id))
+			return
+		}
 		c.JSON(http.StatusInternalServerError, gin.H{
 			"error": fmt.Sprintf("database error: %s", err.Error())},
 		)
@@ -54,6 +60,33 @@ func (s *SkillController) CreateSkill(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
+
+	userId, exists := c.Get("userId")
+	if !exists {
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"error": fmt.Sprintf("Could not find `userId` in auth token")},
+		)
+		return
+	}
+
+	userUuid, err := uuid.FromString(userId.(string))
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "userId in token not valid uuid"})
+		return
+	}
+
+	exists, err = s.Repo.ExistsByUserId(reqBody.SkillId, userUuid)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+	if exists {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Skill already exists for user"})
+		return
+	}
+
+	reqBody.UserId = userUuid
+
 	rec, err := s.Repo.CreateOne(reqBody)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{

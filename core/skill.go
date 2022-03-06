@@ -6,14 +6,14 @@ import (
 )
 
 type Skill struct {
-	Id           uuid.UUID     `json:"id"`
-	SkillId      string        `json:"skillId" binding:"required"`
-	UserId       uuid.NullUUID `json:"userId"`
-	Exp          int           `json:"exp"`
-	Txp          int           `json:"txp"`
-	Level        int           `json:"level"`
-	DateCreated  time.Time     `json:"dateCreated"`
-	DateModified time.Time     `json:"dateModified"`
+	Id           uuid.UUID `json:"id"`
+	SkillId      string    `json:"skillId" binding:"required"`
+	UserId       uuid.UUID `json:"userId"`
+	Exp          int       `json:"exp"`
+	Txp          int       `json:"txp"`
+	Level        int       `json:"level"`
+	DateCreated  time.Time `json:"dateCreated"`
+	DateModified time.Time `json:"dateModified"`
 }
 
 var skillTable = createSkillTable()

@@ -57,5 +57,8 @@ func AuthGuardian(guardian auth.PermissionGuardian) gin.HandlerFunc {
 			return
 		}
 
+		userId := claims["userId"]
+		c.Set("userId", userId)
+
 	}
 }

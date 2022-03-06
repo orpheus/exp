@@ -15,26 +15,29 @@ type SkillRepo struct {
 }
 
 func (s *SkillRepo) FindAll() []core.Skill {
-	SkillRows, err := s.DB.Query(context.Background(), "select * from skill")
+	rows, err := s.DB.Query(context.Background(), "select * from skill")
 	if err != nil {
 		panic(err)
 	}
-	defer SkillRows.Close()
+	defer rows.Close()
 
 	var skills []core.Skill
-	for SkillRows.Next() {
+	for rows.Next() {
 		var r core.Skill
-		err := SkillRows.Scan(&r.Id, &r.SkillId, &r.UserId, &r.Exp, &r.Txp, &r.Level, &r.DateCreated, &r.DateModified)
+		err := rows.Scan(&r.Id, &r.SkillId, &r.UserId, &r.Exp, &r.Txp, &r.Level, &r.DateCreated, &r.DateModified)
 		if err != nil {
 			log.Fatal(err)
 		}
 		skills = append(skills, r)
 	}
-	if err := SkillRows.Err(); err != nil {
+	if err := rows.Err(); err != nil {
 		log.Fatal(err)
 	}
 
 	fmt.Printf("Fetched %d skills\n", len(skills))
+	if len(skills) == 0 {
+		return []core.Skill{}
+	}
 	return skills
 }
 
@@ -43,7 +46,6 @@ func (s *SkillRepo) FindById(id uuid.UUID) (core.Skill, error) {
 	var skill core.Skill
 	err := s.DB.QueryRow(context.Background(), sql, id).
 		Scan(&skill.Id, &skill.SkillId, &skill.UserId, &skill.Exp, &skill.Txp, &skill.Level, &skill.DateCreated, &skill.DateModified)
-	fmt.Println(skill)
 	return skill, err
 }
 
@@ -54,10 +56,8 @@ func (s *SkillRepo) CreateOne(skill core.Skill) (core.Skill, error) {
 
 	var sk core.Skill
 	// TODO(Make level 1 by default in postgres)
-	err := s.DB.QueryRow(context.Background(), sql, skill.SkillId, nil, skill.Exp, skill.Txp, 1, time.Now(), time.Now()).
+	err := s.DB.QueryRow(context.Background(), sql, skill.SkillId, skill.UserId, skill.Exp, skill.Txp, 1, time.Now(), time.Now()).
 		Scan(&sk.Id, &sk.SkillId, &sk.UserId, &sk.Exp, &sk.Txp, &sk.Level, &sk.DateCreated, &sk.DateModified)
-
-	fmt.Println(sk)
 
 	return sk, err
 }
@@ -77,4 +77,12 @@ func (s *SkillRepo) UpdateExpLvl(skill core.Skill) (core.Skill, error) {
 	err := s.DB.QueryRow(context.Background(), sql, skill.Exp, skill.Txp, skill.Level, time.Now(), skill.Id).
 		Scan(&sk.Id, &sk.SkillId, &sk.UserId, &sk.Exp, &sk.Txp, &sk.Level, &sk.DateCreated, &sk.DateModified)
 	return sk, err
+}
+
+func (s *SkillRepo) ExistsByUserId(skillId string, userId uuid.UUID) (bool, error) {
+	ds := "select exists (select true from skill where skill_id=$1 and user_id=$2)"
+	var b bool
+	err := s.DB.QueryRow(context.Background(), ds, skillId, userId).
+		Scan(&b)
+	return b, err
 }
