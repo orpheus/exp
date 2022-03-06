@@ -9,20 +9,39 @@ import (
 	"github.com/jackc/pgx/v4"
 	"github.com/jackc/pgx/v4/pgxpool"
 	"github.com/orpheus/exp/controllers"
+	"github.com/orpheus/exp/db"
+	"log"
 	"os"
 )
 
-func main() {
-	dbConnString := "postgresql://roark:@localhost:5432/exp"
-	dbConfig, err := pgxpool.ParseConfig(dbConnString)
-	if err != nil {
-		panic("Could not parse db connection string")
+func getEnv(key, fallback string) string {
+	value, exists := os.LookupEnv(key)
+	if !exists {
+		value = fallback
 	}
+	return value
+}
+
+func main() {
+	dbUser := getEnv("DB_USER", "roark")
+	dbPass := getEnv("DB_PASS", "")
+	dbName := getEnv("DB_NAME", "exp")
+	dbHost := getEnv("DB_HOST", "localhost")
+	dbPort := getEnv("DB_PORT", "5432")
+	dbUrl := fmt.Sprintf("postgresql://%s:%s@%s:%s/%s", dbUser, dbPass, dbHost, dbPort, dbName)
+
+	dbConfig, err := pgxpool.ParseConfig(dbUrl)
+	if err != nil {
+		log.Fatalln("Could not parse db connection string")
+	}
+
 	conn, err := pgxpool.ConnectConfig(context.Background(), dbConfig)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Unable to connect to database: %v\n", err)
 		os.Exit(1)
 	}
+	defer conn.Close()
+
 	dbConfig.AfterConnect = func(ctx context.Context, conn *pgx.Conn) error {
 		conn.ConnInfo().RegisterDataType(pgtype.DataType{
 			Value: &pgtypeuuid.UUID{},
@@ -31,7 +50,8 @@ func main() {
 		})
 		return nil
 	}
-	defer conn.Close()
+
+	db.Migrate(conn)
 
 	r := gin.Default()
 	controllers.RegisterAll(r, conn)

@@ -9,7 +9,7 @@
 3. ~~Authorization (Roles + Permissions)~~
 4. ~~Limit 1 skill per type per account~~
 7. ~~Set max txp you can add based on last modified date~~
-5. Migrations
+5. ~~Migrations~~
 6. Tests
 
 
