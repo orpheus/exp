@@ -60,5 +60,6 @@ func AuthGuardian(guardian auth.PermissionGuardian) gin.HandlerFunc {
 		userId := claims["userId"]
 		c.Set("userId", userId)
 
+		c.Next()
 	}
 }

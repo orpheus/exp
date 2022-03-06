@@ -23,22 +23,16 @@ func (svc *SignOnController) RegisterRoutes(router *gin.RouterGroup) {
 	}
 }
 
-type LoginCredentials struct {
-	Username string `json:"username" binding:"required"`
-	Password string `json:"password" binding:"required"`
-}
-
 func (svc *SignOnController) Login(c *gin.Context) {
-	var credentials LoginCredentials
-	err := c.ShouldBind(&credentials)
-	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+	username, password, hasAuth := c.Request.BasicAuth()
+	if !hasAuth {
+		c.JSON(http.StatusUnauthorized, "Missing required basic auth headers")
 		return
 	}
 
-	user, err := svc.Repo.GetUserLoginInfo(credentials.Username)
+	user, err := svc.Repo.GetUserLoginInfo(username)
 	// Compare the stored hashed password, with the hashed version of the password that was received
-	if err = bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(credentials.Password)); err != nil {
+	if err = bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(password)); err != nil {
 		// If the two passwords don't match, return a 401 status
 		c.JSON(http.StatusUnauthorized, "Unauthorized")
 		return
