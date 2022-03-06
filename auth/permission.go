@@ -29,14 +29,23 @@ func MakePermissionGuardian() PermissionGuardian {
 		open("health", "GET"),
 	}
 
+	// These are ordered, put more specific endpoints higher than less specific ones
 	restrictions := []Restriction{
-		restrictAll("skills?", "exp.skill"),
+		restrict("skill/addTxp", map[string]string{"POST": "exp.skill.addTxp"}),
+		restrictAllSpecial("skills?", "exp.skill", map[string]string{"DELETE": "admin.skill.delete"}),
 		restrictAll("skillConfigs?", "exp.skillConfig"),
 		restrictAll("users?", "exp.user"),
 		restrictAll("role?", "exp.role"),
 	}
 
 	return PermissionGuardian{Freedoms: freedoms, Restrictions: restrictions}
+}
+
+func restrict(endpoint string, methodMap map[string]string) Restriction {
+	return Restriction{
+		UriRegex:  endpointRegex(endpoint),
+		MethodMap: methodMap,
+	}
 }
 
 func restrictAll(endpoint string, permissionPath string) Restriction {
@@ -48,6 +57,14 @@ func restrictAll(endpoint string, permissionPath string) Restriction {
 			"POST":   fmt.Sprintf("%s.create", permissionPath),
 			"DELETE": fmt.Sprintf("%s.delete", permissionPath),
 		}}
+}
+
+func restrictAllSpecial(endpoint string, permissionPath string, specialRules map[string]string) Restriction {
+	restriction := restrictAll(endpoint, permissionPath)
+	for req, permission := range specialRules {
+		restriction.MethodMap[req] = permission
+	}
+	return restriction
 }
 
 func open(uri string, requestMethod string) Freedom {

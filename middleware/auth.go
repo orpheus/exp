@@ -36,6 +36,7 @@ func AuthGuardian(guardian auth.PermissionGuardian) gin.HandlerFunc {
 		}
 
 		claims := token.Claims.(jwt.MapClaims)
+		fmt.Println(claims, c.Request.RequestURI, c.Request.Method)
 		requiredPermission := guardian.GetRequiredPermission(c.Request.RequestURI, c.Request.Method)
 		if requiredPermission == "" {
 			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "Could not find required permission"})
