@@ -11,6 +11,7 @@ import (
 	"log"
 	"net/http"
 	"strconv"
+	"time"
 )
 
 type SkillController struct {
@@ -30,7 +31,11 @@ func (s *SkillController) RegisterRoutes(router *gin.RouterGroup) {
 }
 
 func (s *SkillController) FindAllSkills(c *gin.Context) {
-	skills := s.Repo.FindAll()
+	skills, err := s.Repo.FindAll()
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error:": err.Error()})
+		return
+	}
 	c.JSON(http.StatusOK, skills)
 }
 
@@ -98,10 +103,10 @@ func (s *SkillController) CreateSkill(c *gin.Context) {
 }
 
 func (s *SkillController) AddTxp(c *gin.Context) {
-	id := c.Query("id")
+	skillId := c.Query("id")
 	txp := c.Query("txp")
 
-	parsedId, err := uuid.FromString(id)
+	parsedSkillId, err := uuid.FromString(skillId)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, "Failed to parse id as uuid")
 		return
@@ -113,7 +118,16 @@ func (s *SkillController) AddTxp(c *gin.Context) {
 		return
 	}
 
-	skill, err := s.Repo.FindById(parsedId)
+	skill, err := s.Repo.FindById(parsedSkillId)
+
+	now := time.Now()
+	last := skill.DateLastTxpAdd
+	secondsSinceLastUpdate := int(now.Sub(last).Seconds())
+
+	if parsedTxp > secondsSinceLastUpdate {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Txp is greater than time since last update"})
+		return
+	}
 
 	skill.AddTxp(parsedTxp)
 
@@ -130,11 +144,18 @@ func (s *SkillController) AddTxp(c *gin.Context) {
 }
 
 func (s *SkillController) DeleteById(c *gin.Context) {
-	id, err := uuid.FromString(c.Param("id"))
+	skillId, err := uuid.FromString(c.Param("id"))
 	if err != nil {
 		log.Fatalf("failed to parse UUID %q: %v", s, err)
 	}
-	response, err := s.Repo.DeleteById(id)
+	_, err = s.Repo.FindById(skillId)
+	if err != nil {
+		if errors.As(err, &pgx.ErrNoRows) {
+			c.JSON(http.StatusNotFound, fmt.Sprintf("Skill %s not found", skillId))
+			return
+		}
+	}
+	response, err := s.Repo.DeleteById(skillId)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{
 			"error": fmt.Sprintf("database error: %s", err.Error())},

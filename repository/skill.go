@@ -14,17 +14,17 @@ type SkillRepo struct {
 	DB *pgxpool.Pool
 }
 
-func (s *SkillRepo) FindAll() []core.Skill {
+func (s *SkillRepo) FindAll() ([]core.Skill, error) {
 	rows, err := s.DB.Query(context.Background(), "select * from skill")
 	if err != nil {
-		panic(err)
+		return nil, err
 	}
 	defer rows.Close()
 
 	var skills []core.Skill
 	for rows.Next() {
 		var r core.Skill
-		err := rows.Scan(&r.Id, &r.SkillId, &r.UserId, &r.Exp, &r.Txp, &r.Level, &r.DateCreated, &r.DateModified)
+		err := rows.Scan(&r.Id, &r.SkillId, &r.UserId, &r.Exp, &r.Txp, &r.Level, &r.DateCreated, &r.DateModified, &r.DateLastTxpAdd)
 		if err != nil {
 			log.Fatal(err)
 		}
@@ -36,28 +36,28 @@ func (s *SkillRepo) FindAll() []core.Skill {
 
 	fmt.Printf("Fetched %d skills\n", len(skills))
 	if len(skills) == 0 {
-		return []core.Skill{}
+		return []core.Skill{}, nil
 	}
-	return skills
+	return skills, nil
 }
 
 func (s *SkillRepo) FindById(id uuid.UUID) (core.Skill, error) {
 	sql := "select * from skill where id = $1"
 	var skill core.Skill
 	err := s.DB.QueryRow(context.Background(), sql, id).
-		Scan(&skill.Id, &skill.SkillId, &skill.UserId, &skill.Exp, &skill.Txp, &skill.Level, &skill.DateCreated, &skill.DateModified)
+		Scan(&skill.Id, &skill.SkillId, &skill.UserId, &skill.Exp, &skill.Txp, &skill.Level, &skill.DateCreated, &skill.DateModified, &skill.DateLastTxpAdd)
 	return skill, err
 }
 
 func (s *SkillRepo) CreateOne(skill core.Skill) (core.Skill, error) {
 	sql := "insert into skill (skill_id, user_id, exp, txp, level, date_created, date_modified) " +
 		"VALUES ($1, $2, $3, $4, $5, $6, $7) " +
-		"RETURNING id, skill_id, user_id, exp, txp, level, date_created, date_modified"
+		"RETURNING id, skill_id, user_id, exp, txp, level, date_created, date_modified, date_last_txp_add"
 
 	var sk core.Skill
 	// TODO(Make level 1 by default in postgres)
 	err := s.DB.QueryRow(context.Background(), sql, skill.SkillId, skill.UserId, skill.Exp, skill.Txp, 1, time.Now(), time.Now()).
-		Scan(&sk.Id, &sk.SkillId, &sk.UserId, &sk.Exp, &sk.Txp, &sk.Level, &sk.DateCreated, &sk.DateModified)
+		Scan(&sk.Id, &sk.SkillId, &sk.UserId, &sk.Exp, &sk.Txp, &sk.Level, &sk.DateCreated, &sk.DateModified, &sk.DateLastTxpAdd)
 
 	return sk, err
 }
@@ -70,12 +70,12 @@ func (s *SkillRepo) DeleteById(id uuid.UUID) (string, error) {
 }
 
 func (s *SkillRepo) UpdateExpLvl(skill core.Skill) (core.Skill, error) {
-	sql := "update skill set exp = $1, txp = $2, level = $3, date_modified = $4 where id = $5 " +
-		"RETURNING id, skill_id, user_id, exp, txp, level, date_created, date_modified"
+	sql := "update skill set exp = $1, txp = $2, level = $3, date_modified = $4, date_last_txp_add = $5 where id = $6 " +
+		"RETURNING id, skill_id, user_id, exp, txp, level, date_created, date_modified, date_last_txp_add"
 
 	var sk core.Skill
-	err := s.DB.QueryRow(context.Background(), sql, skill.Exp, skill.Txp, skill.Level, time.Now(), skill.Id).
-		Scan(&sk.Id, &sk.SkillId, &sk.UserId, &sk.Exp, &sk.Txp, &sk.Level, &sk.DateCreated, &sk.DateModified)
+	err := s.DB.QueryRow(context.Background(), sql, skill.Exp, skill.Txp, skill.Level, time.Now(), time.Now(), skill.Id).
+		Scan(&sk.Id, &sk.SkillId, &sk.UserId, &sk.Exp, &sk.Txp, &sk.Level, &sk.DateCreated, &sk.DateModified, &sk.DateLastTxpAdd)
 	return sk, err
 }
 

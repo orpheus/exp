@@ -55,14 +55,15 @@ CREATE TABLE IF NOT EXISTS skill_config
 --
 CREATE TABLE IF NOT EXISTS skill
 (
-    id            UUID PRIMARY KEY                  DEFAULT uuid_generate_v4(),
-    skill_id      CHAR(3)                  NOT NULL,
-    user_id       UUID,
-    exp           INTEGER                  NOT NULL DEFAULT 0,
-    txp           INTEGER                  NOT NULL DEFAULT 0,
-    level         SMALLINT                          DEFAULT 1,
-    date_created  TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    date_modified TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    id                UUID PRIMARY KEY                  DEFAULT uuid_generate_v4(),
+    skill_id          CHAR(3)                  NOT NULL,
+    user_id           UUID,
+    exp               INTEGER                  NOT NULL DEFAULT 0,
+    txp               INTEGER                  NOT NULL DEFAULT 0,
+    level             SMALLINT                          DEFAULT 1,
+    date_created      TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    date_modified     TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    date_last_txp_add TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
     CONSTRAINT fk_skill_id
         FOREIGN KEY (skill_id)

@@ -15,6 +15,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - add txp to skill with increasing level system
 - users, login, sign up
 - permission, roles, authorized routes
+- allow one skill type per user
+- date_last_txp_add db column under skill
+- restrict adding txp more than time diff of last add date
 
 ### Changed
 ### Fixed
