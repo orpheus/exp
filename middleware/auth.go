@@ -41,18 +41,16 @@ func AuthGuardian(guardian auth.PermissionGuardian) gin.HandlerFunc {
 			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "Could not find required permission"})
 			return
 		}
+
 		scope := claims["scope"].([]interface{})
 		hasPermission := false
 		for _, p := range scope {
-			if requiredPermission == p {
-				hasPermission = true
-				break
-			}
-			if p == "*" {
-				hasPermission = true
+			hasPermission = auth.HasPermission(requiredPermission, p.(string))
+			if hasPermission {
 				break
 			}
 		}
+
 		if !hasPermission {
 			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": fmt.Sprintf("User does not have the following permission: %s", requiredPermission)})
 			return

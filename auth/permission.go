@@ -101,3 +101,42 @@ func (p *PermissionGuardian) GetRequiredPermission(requestUri string, requestMet
 
 	return methodMap[strings.ToUpper(requestMethod)]
 }
+
+func HasPermission(requiredPermission string, userPermission string) bool {
+	allStar := "*"
+
+	if userPermission == allStar {
+		return true
+	}
+	if requiredPermission == userPermission {
+		return true
+	}
+
+	reqSplit := strings.Split(requiredPermission, ".")
+	userSplit := strings.Split(userPermission, ".")
+
+	reqLenIdx := len(reqSplit) - 1
+
+	for idx, part := range userSplit {
+		// i.e. exp.skill.read vs exp.skill.level.update
+		if idx > reqLenIdx {
+			return false
+		}
+		reqPart := reqSplit[idx]
+		if reqPart != part {
+			// i.e. exp.skill.read vs exp.skill.*
+			if part == allStar {
+				return true
+			}
+			// i.e. exp.skill.read vs exp.user.read
+			return false
+		}
+		// i.e. exp.skill.read vs exp.skill.read
+		if reqPart == part {
+			continue
+		}
+
+	}
+
+	panic("HasPermission fn failed")
+}
