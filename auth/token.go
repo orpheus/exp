@@ -2,19 +2,20 @@ package auth
 
 import (
 	"fmt"
+	"github.com/gofrs/uuid"
 	"github.com/golang-jwt/jwt"
 	"os"
 	"time"
 )
 
 type JWTService interface {
-	GenerateToken(email string, isUser bool) string
+	GenerateToken(userId uuid.UUID, scope []string) string
 	ValidateToken(token string) (*jwt.Token, error)
 }
 
 type authCustomClaims struct {
-	Name string `json:"name"`
-	User bool   `json:"user"`
+	UserId string   `json:"userId"`
+	Scope  []string `json:"scope"`
 	jwt.StandardClaims
 }
 
@@ -38,10 +39,10 @@ func getSecretKey() string {
 	return secret
 }
 
-func (service *jwtServices) GenerateToken(name string, isUser bool) string {
+func (service *jwtServices) GenerateToken(userId uuid.UUID, scope []string) string {
 	claims := &authCustomClaims{
-		name,
-		isUser,
+		userId.String(),
+		scope,
 		jwt.StandardClaims{
 			ExpiresAt: time.Now().Add(time.Hour * 12).Unix(),
 			Issuer:    service.issuer,
@@ -61,9 +62,8 @@ func (service *jwtServices) GenerateToken(name string, isUser bool) string {
 func (service *jwtServices) ValidateToken(encodedToken string) (*jwt.Token, error) {
 	return jwt.Parse(encodedToken, func(token *jwt.Token) (interface{}, error) {
 		if _, isValid := token.Method.(*jwt.SigningMethodHMAC); !isValid {
-			return nil, fmt.Errorf("Invalid token", token.Header["alg"])
+			return nil, fmt.Errorf("invalid token %s", token.Header["alg"])
 		}
 		return []byte(service.secretKey), nil
 	})
-
 }

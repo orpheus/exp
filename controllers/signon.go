@@ -10,9 +10,10 @@ import (
 )
 
 type SignOnController struct {
-	Router *gin.Engine
-	Repo   *repository.UserRepo
-	Auth   auth.JWTService
+	Router   *gin.Engine
+	Repo     *repository.UserRepo
+	RoleRepo *repository.RoleRepo
+	Auth     auth.JWTService
 }
 
 func (svc *SignOnController) RegisterRoutes(router *gin.RouterGroup) {
@@ -35,15 +36,21 @@ func (svc *SignOnController) Login(c *gin.Context) {
 		return
 	}
 
-	password, err := svc.Repo.GetPasswordForUser(credentials.Username)
+	user, err := svc.Repo.GetUserLoginInfo(credentials.Username)
 	// Compare the stored hashed password, with the hashed version of the password that was received
-	if err = bcrypt.CompareHashAndPassword([]byte(password), []byte(credentials.Password)); err != nil {
+	if err = bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(credentials.Password)); err != nil {
 		// If the two passwords don't match, return a 401 status
 		c.JSON(http.StatusUnauthorized, "Unauthorized")
 		return
 	}
 
-	jwt := svc.Auth.GenerateToken(credentials.Username, true)
+	role, err := svc.RoleRepo.FindById(user.RoleId)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": fmt.Sprintf("Role %s does not exist", role.Id.String())})
+		return
+	}
+
+	jwt := svc.Auth.GenerateToken(user.Id, role.Permissions)
 
 	c.JSON(http.StatusOK, jwt)
 }
@@ -62,13 +69,18 @@ func (svc *SignOnController) SignUp(c *gin.Context) {
 		return
 	}
 
+	_, err = svc.RoleRepo.FindById(newUser.RoleId)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": fmt.Sprintf("Role %s does not exist", newUser.RoleId)})
+		return
+	}
+
 	// The second argument is the cost of hashing, which we arbitrarily set as 8 (this value can be more or less, depending on the computing power you wish to utilize)
 	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(newUser.Password), 8)
 	if err != nil {
 		_ = c.AbortWithError(http.StatusInternalServerError, err)
 	}
 
-	fmt.Println(hashedPassword)
 	createdUser, err := svc.Repo.Create(newUser, string(hashedPassword))
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})

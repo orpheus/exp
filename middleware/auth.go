@@ -9,10 +9,9 @@ import (
 	"strings"
 )
 
-func AuthGuardian() gin.HandlerFunc {
-	PermissionGuardian := auth.MakePermissionGuardian()
+func AuthGuardian(guardian auth.PermissionGuardian) gin.HandlerFunc {
 	return func(c *gin.Context) {
-		if PermissionGuardian.HasOpenPermission(c.Request.RequestURI, c.Request.Method) {
+		if guardian.HasOpenPermission(c.Request.RequestURI, c.Request.Method) {
 			return
 		}
 
@@ -28,7 +27,6 @@ func AuthGuardian() gin.HandlerFunc {
 			return
 		}
 		tokenString := strings.TrimSpace(authHeader[len(BearerSchema):])
-		fmt.Println(tokenString)
 
 		token, err := auth.JWTAuthService().ValidateToken(tokenString)
 		if err != nil {
@@ -36,11 +34,28 @@ func AuthGuardian() gin.HandlerFunc {
 			c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 			return
 		}
-		fmt.Println(token)
 
-		if token.Valid {
-			claims := token.Claims.(jwt.MapClaims)
-			fmt.Println(claims)
+		claims := token.Claims.(jwt.MapClaims)
+		requiredPermission := guardian.GetRequiredPermission(c.Request.RequestURI, c.Request.Method)
+		if requiredPermission == "" {
+			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "Could not find required permission"})
+			return
+		}
+		scope := claims["scope"].([]interface{})
+		hasPermission := false
+		for _, p := range scope {
+			if requiredPermission == p {
+				hasPermission = true
+				break
+			}
+			if p == "*" {
+				hasPermission = true
+				break
+			}
+		}
+		if !hasPermission {
+			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": fmt.Sprintf("User does not have the following permission: %s", requiredPermission)})
+			return
 		}
 
 	}

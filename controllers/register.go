@@ -9,8 +9,10 @@ import (
 )
 
 func RegisterAll(r *gin.Engine, conn *pgxpool.Pool) {
+	permissionGuardian := auth.MakePermissionGuardian()
+
 	v1 := r.Group("/api")
-	v1.Use(middleware.AuthGuardian())
+	v1.Use(middleware.AuthGuardian(permissionGuardian))
 
 	// V2 example
 	// v2 := v1.Group("/v2")
@@ -21,6 +23,32 @@ func RegisterAll(r *gin.Engine, conn *pgxpool.Pool) {
 			"message": "healthy",
 		})
 	})
+
+	// Role
+	roleRepo := &repository.RoleRepo{DB: conn}
+	roleController := RoleController{
+		Router: r,
+		Repo:   roleRepo,
+	}
+	roleController.RegisterRoutes(v1)
+
+	// Permissions
+	permissionController := PermissionController{
+		Router:   r,
+		Repo:     &repository.PermissionRepo{DB: conn},
+		Guardian: permissionGuardian,
+	}
+	permissionController.RegisterRoutes(v1)
+	permissionController.EnforcePermissions()
+
+	// SignOn
+	signOnController := SignOnController{
+		Router:   r,
+		Repo:     &repository.UserRepo{DB: conn},
+		RoleRepo: roleRepo,
+		Auth:     auth.JWTAuthService(),
+	}
+	signOnController.RegisterRoutes(v1)
 
 	// SkillConfig
 	skillConfigController := SkillConfigController{
@@ -35,14 +63,6 @@ func RegisterAll(r *gin.Engine, conn *pgxpool.Pool) {
 		Repo:   &repository.SkillRepo{DB: conn},
 	}
 	skillController.RegisterRoutes(v1)
-
-	// SignOn
-	signOnController := SignOnController{
-		Router: r,
-		Repo:   &repository.UserRepo{DB: conn},
-		Auth:   auth.JWTAuthService(),
-	}
-	signOnController.RegisterRoutes(v1)
 
 	// User
 	userController := UserController{

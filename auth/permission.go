@@ -25,12 +25,15 @@ func MakePermissionGuardian() PermissionGuardian {
 	freedoms := []Freedom{
 		open("signup", "POST"),
 		open("login", "POST"),
+		open("permission", "GET"),
+		open("health", "GET"),
 	}
 
 	restrictions := []Restriction{
 		restrictAll("skills?", "exp.skill"),
 		restrictAll("skillConfigs?", "exp.skillConfig"),
 		restrictAll("users?", "exp.user"),
+		restrictAll("role?", "exp.role"),
 	}
 
 	return PermissionGuardian{Freedoms: freedoms, Restrictions: restrictions}

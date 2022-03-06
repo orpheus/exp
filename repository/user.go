@@ -16,7 +16,7 @@ type User struct {
 	Username     string         `json:"username" binding:"required"`
 	Password     string         `json:"password,omitempty"`
 	Email        sql.NullString `json:"email,omitempty"`
-	RoleId       uuid.NullUUID  `json:"roleId,omitempty"`
+	RoleId       uuid.UUID      `json:"roleId,omitempty" binding:"required"`
 	DateCreated  time.Time      `json:"dateCreated"`
 	DateModified time.Time      `json:"dateModified"`
 }
@@ -60,11 +60,11 @@ func (r *UserRepo) FindByUsername(username string) (User, error) {
 	return u, err
 }
 
-func (r *UserRepo) GetPasswordForUser(username string) (string, error) {
-	ds := "select password from user_account where username = $1"
-	var password string
-	err := r.DB.QueryRow(context.Background(), ds, username).Scan(&password)
-	return password, err
+func (r *UserRepo) GetUserLoginInfo(username string) (User, error) {
+	ds := "select id, role_id, password from user_account where username = $1"
+	var user User
+	err := r.DB.QueryRow(context.Background(), ds, username).Scan(&user.Id, &user.RoleId, &user.Password)
+	return user, err
 }
 
 // Create TODO(Handle email)
@@ -85,18 +85,11 @@ func (u *User) EmptyPassword() {
 }
 
 func (u *User) ToDTO() dto.User {
-	var roleId string
-	validRole := u.RoleId.Valid
-	if validRole {
-		roleId = u.RoleId.UUID.String()
-	} else {
-		roleId = ""
-	}
 	return dto.User{
 		Id:           u.Id,
 		Username:     u.Username,
 		Email:        u.Email.String,
-		RoleId:       roleId,
+		RoleId:       u.RoleId.String(),
 		DateCreated:  u.DateCreated,
 		DateModified: u.DateModified,
 	}
