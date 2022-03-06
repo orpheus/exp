@@ -120,12 +120,25 @@ func (s *SkillController) AddTxp(c *gin.Context) {
 
 	skill, err := s.Repo.FindById(parsedSkillId)
 
+	if parsedTxp == 0 {
+		c.JSON(http.StatusOK, skill)
+		return
+	}
+
 	now := time.Now()
 	last := skill.DateLastTxpAdd
 	secondsSinceLastUpdate := int(now.Sub(last).Seconds())
 
-	if parsedTxp > secondsSinceLastUpdate {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Txp is greater than time since last update"})
+	specialOneTimeBypass := specialRuleFirstTimeTxpApp(skill, parsedTxp)
+
+	if parsedTxp > secondsSinceLastUpdate && !specialOneTimeBypass {
+		var message string
+		if skill.Txp == 0 {
+			message = "Cannot add more than 3600 txp for the first hour of the skill's lifetime"
+		} else {
+			message = "Cannot add more txp than the difference of time in seconds between now and the last update"
+		}
+		c.JSON(http.StatusBadRequest, gin.H{"error": message})
 		return
 	}
 
@@ -141,6 +154,17 @@ func (s *SkillController) AddTxp(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, updatedSkill)
+}
+
+// Special Rule For New Skills: If the skill was created within the last hour and has 0 TXP, allow max 1 hour of txp
+func specialRuleFirstTimeTxpApp(skill core.Skill, parsedTxp int) bool {
+	now := time.Now()
+	if skill.Txp == 0 && now.Sub(skill.DateCreated).Hours() < 1 {
+		if parsedTxp <= int(time.Hour.Seconds()) {
+			return true
+		}
+	}
+	return false
 }
 
 func (s *SkillController) DeleteById(c *gin.Context) {
