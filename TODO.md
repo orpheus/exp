@@ -4,12 +4,14 @@
 
 ### Service
 
-1. Migrations
+1. ~~SkillConfig, Skill, Txp/Level Services~~
 2. ~~Authentication (JWT) (Users)~~
-3. Authorization (Roles + Permissions)
-4. Tests
-5. Limit 1 skill per type per account
-6. Set max txp you can add based on last modified date
+3. ~~Authorization (Roles + Permissions)~~
+4. Limit 1 skill per type per account
+7. Set max txp you can add based on last modified date
+5. Migrations
+6. Tests
+
 
 ### WebApp
 

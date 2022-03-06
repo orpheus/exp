@@ -8,12 +8,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
-- DB Conn (pgx)
-- Router Setup (gin)
-- SkillConfig Controller and CRUD
-- Skill Controller and CRUD
-- Skill.AddTxp
-- User table with login and sign up
+- db postgres setup (pgx)
+- router setup (gin)
+- skillConfig controller, repository, crud methods
+- skill controller, repository, crud methods
+- add txp to skill with increasing level system
+- users, login, sign up
+- permission, roles, authorized routes
 
 ### Changed
 ### Fixed
