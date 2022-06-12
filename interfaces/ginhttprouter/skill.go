@@ -1,41 +1,53 @@
-package controllers
+package ginhttprouter
 
 import (
 	"fmt"
 	"github.com/gin-gonic/gin"
 	"github.com/gofrs/uuid"
 	"github.com/jackc/pgx/v4"
-	"github.com/orpheus/exp/core"
-	"github.com/orpheus/exp/repository"
+	"github.com/orpheus/exp/domain"
 	"github.com/pkg/errors"
 	"log"
 	"net/http"
 	"strconv"
-	"time"
 )
 
+// SkillController takes a service (SkillInteractor) and registers its
+// method receivers as gin route handlers. It is fundamentally the job of this
+// WebServiceHandler to handle incoming route requests and use the interactor
+// service to handle the domain/business logic. The SkillController handlers
+// will take care of request parsing.
 type SkillController struct {
-	Router *gin.Engine
-	Repo   *repository.SkillRepo
+	service SkillInteractor
 }
 
+// SkillInteractor interface tells the SkillController what kind of object to expect.
+// When our app is live, it will get constructed with the SkillInteractor struct from
+// usecases which implements these methods.
+type SkillInteractor interface {
+	FindAllSkills() []domain.Skill
+	FindSkillById(id uuid.UUID) (domain.Skill, error)
+	CreateSkill(skill domain.Skill, userId uuid.UUID) (domain.Skill, error)
+	DeleteById(skillId uuid.UUID) error
+	ExistsByUserId(skillId uuid.UUID, userId uuid.UUID) (bool, error)
+	AddTxp(txp int, skillId uuid.UUID) (*domain.Skill, error)
+}
+
+// RegisterRoutes takes a gin router group which determines the base
+// path (i.e. /api).
 func (s *SkillController) RegisterRoutes(router *gin.RouterGroup) {
 	skill := router.Group("/skill")
 	{
-		skill.GET("/", s.FindAllSkills)
+		skill.GET("", s.FindAllSkills)
 		skill.GET("/:id", s.FindSkillById)
-		skill.POST("/", s.CreateSkill)
+		skill.POST("", s.CreateSkill)
 		skill.POST("/addTxp", s.AddTxp)
 		skill.DELETE("/:id", s.DeleteById)
 	}
 }
 
 func (s *SkillController) FindAllSkills(c *gin.Context) {
-	skills, err := s.Repo.FindAll()
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error:": err.Error()})
-		return
-	}
+	skills := s.service.FindAllSkills()
 	c.JSON(http.StatusOK, skills)
 }
 
@@ -45,7 +57,7 @@ func (s *SkillController) FindSkillById(c *gin.Context) {
 		log.Fatalf("failed to parse UUID %q: %v", s, err)
 	}
 	log.Printf("successfully parsed UUID %v", id)
-	skill, err := s.Repo.FindById(id)
+	skill, err := s.service.FindSkillById(id)
 	if err != nil {
 		if errors.As(err, &pgx.ErrNoRows) {
 			c.JSON(http.StatusNotFound, fmt.Sprintf("Skill %s not found", id))
@@ -60,8 +72,8 @@ func (s *SkillController) FindSkillById(c *gin.Context) {
 }
 
 func (s *SkillController) CreateSkill(c *gin.Context) {
-	var reqBody core.Skill
-	if err := c.ShouldBindJSON(&reqBody); err != nil {
+	var skill domain.Skill
+	if err := c.ShouldBindJSON(&skill); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
@@ -80,7 +92,8 @@ func (s *SkillController) CreateSkill(c *gin.Context) {
 		return
 	}
 
-	exists, err = s.Repo.ExistsByUserId(reqBody.SkillId, userUuid)
+	skillUUID, _ := uuid.FromString(skill.SkillId)
+	exists, err = s.service.ExistsByUserId(skillUUID, userUuid)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
@@ -90,9 +103,7 @@ func (s *SkillController) CreateSkill(c *gin.Context) {
 		return
 	}
 
-	reqBody.UserId = userUuid
-
-	rec, err := s.Repo.CreateOne(reqBody)
+	rec, err := s.service.CreateSkill(skill, userUuid)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{
 			"error": fmt.Sprintf("database error: %s", err.Error())},
@@ -103,49 +114,22 @@ func (s *SkillController) CreateSkill(c *gin.Context) {
 }
 
 func (s *SkillController) AddTxp(c *gin.Context) {
-	skillId := c.Query("id")
-	txp := c.Query("txp")
+	queryId := c.Query("id")
+	queryTxp := c.Query("txp")
 
-	parsedSkillId, err := uuid.FromString(skillId)
+	skillId, err := uuid.FromString(queryId)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, "Failed to parse id as uuid")
 		return
 	}
 
-	parsedTxp, err := strconv.Atoi(txp)
+	txp, err := strconv.Atoi(queryTxp)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, "Failed to parse txp as integer")
 		return
 	}
 
-	skill, err := s.Repo.FindById(parsedSkillId)
-
-	if parsedTxp == 0 {
-		c.JSON(http.StatusOK, skill)
-		return
-	}
-
-	now := time.Now()
-	last := skill.DateLastTxpAdd
-	secondsSinceLastUpdate := int(now.Sub(last).Seconds())
-
-	specialOneTimeBypass := specialRuleFirstTimeTxpApp(skill, parsedTxp)
-
-	if parsedTxp > secondsSinceLastUpdate && !specialOneTimeBypass {
-		var message string
-		if skill.Txp == 0 {
-			message = "Cannot add more than 3600 txp for the first hour of the skill's lifetime"
-		} else {
-			message = "Cannot add more txp than the difference of time in seconds between now and the last update"
-		}
-		c.JSON(http.StatusBadRequest, gin.H{"error": message})
-		return
-	}
-
-	skill.AddTxp(parsedTxp)
-
-	updatedSkill, err := s.Repo.UpdateExpLvl(skill)
-
+	updatedSkill, err := s.service.AddTxp(txp, skillId)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{
 			"error": fmt.Sprintf("database error: %s", err.Error())},
@@ -156,35 +140,18 @@ func (s *SkillController) AddTxp(c *gin.Context) {
 	c.JSON(http.StatusOK, updatedSkill)
 }
 
-// Special Rule For New Skills: If the skill was created within the last hour and has 0 TXP, allow max 1 hour of txp
-func specialRuleFirstTimeTxpApp(skill core.Skill, parsedTxp int) bool {
-	now := time.Now()
-	if skill.Txp == 0 && now.Sub(skill.DateCreated).Hours() < 1 {
-		if parsedTxp <= int(time.Hour.Seconds()) {
-			return true
-		}
-	}
-	return false
-}
-
 func (s *SkillController) DeleteById(c *gin.Context) {
 	skillId, err := uuid.FromString(c.Param("id"))
 	if err != nil {
 		log.Fatalf("failed to parse UUID %q: %v", s, err)
 	}
-	_, err = s.Repo.FindById(skillId)
-	if err != nil {
-		if errors.As(err, &pgx.ErrNoRows) {
-			c.JSON(http.StatusNotFound, fmt.Sprintf("Skill %s not found", skillId))
-			return
-		}
-	}
-	response, err := s.Repo.DeleteById(skillId)
+
+	err = s.service.DeleteById(skillId)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{
 			"error": fmt.Sprintf("database error: %s", err.Error())},
 		)
 		return
 	}
-	c.JSON(http.StatusOK, response)
+	c.JSON(http.StatusOK, true)
 }

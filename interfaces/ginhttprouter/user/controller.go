@@ -1,9 +1,8 @@
-package controllers
+package user
 
 import (
 	"github.com/gin-gonic/gin"
-	"github.com/orpheus/exp/dto"
-	"github.com/orpheus/exp/repository"
+	"github.com/orpheus/exp/interfaces/persistence/repository"
 	"net/http"
 )
 
@@ -26,7 +25,7 @@ func (svc *UserController) FindAll(c *gin.Context) {
 		return
 	}
 
-	var userDTOs []dto.User
+	var userDTOs []User
 	for _, user := range users {
 		userDTOs = append(userDTOs, user.ToDTO())
 	}

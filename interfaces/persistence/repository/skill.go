@@ -4,14 +4,23 @@ import (
 	"context"
 	"fmt"
 	"github.com/gofrs/uuid"
-	"github.com/jackc/pgx/v4/pgxpool"
 	"github.com/orpheus/exp/core"
+	"github.com/orpheus/exp/interfaces/persistence/db"
 	"log"
 	"time"
 )
 
+type SkillRepository interface {
+	FindAll() ([]core.Skill, error)
+	FindById(id uuid.UUID) (core.Skill, error)
+	CreateOne(skill core.Skill) (core.Skill, error)
+	DeleteById(id uuid.UUID) (string, error)
+	UpdateExpLvl(skill core.Skill) (core.Skill, error)
+	ExistsByUserId(skillId string, userId uuid.UUID) (bool, error)
+}
+
 type SkillRepo struct {
-	DB *pgxpool.Pool
+	DB db.Connection
 }
 
 func (s *SkillRepo) FindAll() ([]core.Skill, error) {

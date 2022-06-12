@@ -1,10 +1,10 @@
-package controllers
+package ginhttprouter
 
 import (
 	"fmt"
 	"github.com/gin-gonic/gin"
-	"github.com/orpheus/exp/auth"
-	"github.com/orpheus/exp/repository"
+	"github.com/orpheus/exp/interfaces/ginhttprouter/auth"
+	"github.com/orpheus/exp/interfaces/persistence/repository"
 	"golang.org/x/crypto/bcrypt"
 	"net/http"
 )

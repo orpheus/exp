@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"github.com/gofrs/uuid"
 	"github.com/jackc/pgx/v4/pgxpool"
-	"github.com/orpheus/exp/dto"
+	"github.com/orpheus/exp/interfaces/ginhttprouter/user"
 	"log"
 	"time"
 )
@@ -15,7 +15,7 @@ type User struct {
 	Id           uuid.UUID      `json:"id"`
 	Username     string         `json:"username" binding:"required"`
 	Password     string         `json:"password,omitempty"`
-	Email        sql.NullString `json:"email,omitempty"`
+	Email        sql.NullString `json:"email" binding:"required"`
 	RoleId       uuid.UUID      `json:"roleId,omitempty" binding:"required"`
 	DateCreated  time.Time      `json:"dateCreated"`
 	DateModified time.Time      `json:"dateModified"`
@@ -84,8 +84,8 @@ func (u *User) EmptyPassword() {
 	u.Password = ""
 }
 
-func (u *User) ToDTO() dto.User {
-	return dto.User{
+func (u *User) ToDTO() user.User {
+	return user.User{
 		Id:           u.Id,
 		Username:     u.Username,
 		Email:        u.Email.String,

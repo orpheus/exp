@@ -1,9 +1,9 @@
-package controllers
+package ginhttprouter
 
 import (
 	"fmt"
 	"github.com/gin-gonic/gin"
-	"github.com/orpheus/exp/repository"
+	"github.com/orpheus/exp/interfaces/persistence/repository"
 	"net/http"
 )
 

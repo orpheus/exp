@@ -4,12 +4,12 @@ import (
 	"fmt"
 	"github.com/gin-gonic/gin"
 	"github.com/golang-jwt/jwt"
-	"github.com/orpheus/exp/auth"
+	auth2 "github.com/orpheus/exp/interfaces/ginhttprouter/auth"
 	"net/http"
 	"strings"
 )
 
-func AuthGuardian(guardian auth.PermissionGuardian) gin.HandlerFunc {
+func AuthGuardian(guardian auth2.PermissionGuardian) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		if guardian.HasOpenPermission(c.Request.RequestURI, c.Request.Method) {
 			return
@@ -28,7 +28,7 @@ func AuthGuardian(guardian auth.PermissionGuardian) gin.HandlerFunc {
 		}
 		tokenString := strings.TrimSpace(authHeader[len(BearerSchema):])
 
-		token, err := auth.JWTAuthService().ValidateToken(tokenString)
+		token, err := auth2.JWTAuthService().ValidateToken(tokenString)
 		if err != nil {
 			fmt.Println(err)
 			c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
@@ -46,7 +46,7 @@ func AuthGuardian(guardian auth.PermissionGuardian) gin.HandlerFunc {
 		scope := claims["scope"].([]interface{})
 		hasPermission := false
 		for _, p := range scope {
-			hasPermission = auth.HasPermission(requiredPermission, p.(string))
+			hasPermission = auth2.HasPermission(requiredPermission, p.(string))
 			if hasPermission {
 				break
 			}
