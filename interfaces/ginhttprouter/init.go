@@ -50,11 +50,11 @@ func RegisterRoutes(r *gin.Engine) {
 	//signOnController.RegisterRoutes(v1)
 
 	// SkillConfig
-	//skillConfigController := skillconfig.SkillConfigController{
-	//	Router: r,
-	//	Repo:   &repository2.SkillConfigRepo{DB: conn},
-	//}
-	//skillConfigController.RegisterRoutes(v1)
+	skillConfigInteractor := usecases.SkillConfigInteractor{}
+	skillConfigController := SkillConfigController{
+		interactor: &skillConfigInteractor,
+	}
+	skillConfigController.RegisterRoutes(v1Router)
 
 	// Skill
 	skillInteractor := usecases.SkillInteractor{

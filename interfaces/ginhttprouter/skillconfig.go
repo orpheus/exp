@@ -3,13 +3,23 @@ package ginhttprouter
 import (
 	"fmt"
 	"github.com/gin-gonic/gin"
-	"github.com/orpheus/exp/interfaces/persistence/repository"
+	"github.com/orpheus/exp/domain"
 	"net/http"
 )
 
+// SkillConfigController Controller.
 type SkillConfigController struct {
-	Router *gin.Engine
-	Repo   *repository.SkillConfigRepo
+	interactor SkillConfigInteractor
+}
+
+// SkillConfigInteractor Service Interface.
+// TODO("Why do we define this here and not in the domain layer?")
+type SkillConfigInteractor interface {
+	FindAllSkillConfigs() []domain.SkillConfig
+	FindSkillConfigById(id string) (domain.SkillConfig, error)
+	CreateSkillConfig(skillConfig domain.SkillConfig) (domain.SkillConfig, error)
+	CreateSkillConfigs(skillConfigs []domain.SkillConfig) error
+	DeleteById(id string) error
 }
 
 func (s *SkillConfigController) RegisterRoutes(router *gin.RouterGroup) {
@@ -28,13 +38,13 @@ func (s *SkillConfigController) RegisterRoutes(router *gin.RouterGroup) {
 }
 
 func (s *SkillConfigController) FindAllSkillConfigs(c *gin.Context) {
-	skillConfigs := s.Repo.FindAll()
+	skillConfigs := s.interactor.FindAllSkillConfigs()
 	c.IndentedJSON(http.StatusOK, skillConfigs)
 }
 
 func (s *SkillConfigController) FindSkillConfigById(c *gin.Context) {
 	id := c.Param("id")
-	skillConfigs, err := s.Repo.FindById(id)
+	skillConfigs, err := s.interactor.FindSkillConfigById(id)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{
 			"error": fmt.Sprintf("database error: %s", err.Error())},
@@ -45,15 +55,15 @@ func (s *SkillConfigController) FindSkillConfigById(c *gin.Context) {
 }
 
 func (s *SkillConfigController) CreateSkillConfig(c *gin.Context) {
-	var reqBody repository.SkillConfig
+	var reqBody domain.SkillConfig
 	if err := c.ShouldBindJSON(&reqBody); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
-	rec, err := s.Repo.CreateOne(reqBody)
+	rec, err := s.interactor.CreateSkillConfig(reqBody)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{
-			"error": fmt.Sprintf("database error: %s", err.Error())},
+			"error": fmt.Sprintf("error: %s", err.Error())},
 		)
 		return
 	}
@@ -61,30 +71,29 @@ func (s *SkillConfigController) CreateSkillConfig(c *gin.Context) {
 }
 
 func (s *SkillConfigController) CreateSkillConfigs(c *gin.Context) {
-	var reqBody []repository.SkillConfig
+	var reqBody []domain.SkillConfig
 	if err := c.ShouldBindJSON(&reqBody); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
-	fmt.Println("Req: ", reqBody)
-	ret, err := s.Repo.CreateMany(reqBody)
+	err := s.interactor.CreateSkillConfigs(reqBody)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{
 			"error": err.Error()},
 		)
 		return
 	}
-	c.JSON(http.StatusOK, ret)
+	c.JSON(http.StatusOK, "Created")
 }
 
 func (s *SkillConfigController) DeleteById(c *gin.Context) {
 	id := c.Param("id")
-	response, err := s.Repo.DeleteById(id)
+	err := s.interactor.DeleteById(id)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{
 			"error": fmt.Sprintf("database error: %s", err.Error())},
 		)
 		return
 	}
-	c.JSON(http.StatusOK, response)
+	c.JSON(http.StatusOK, true)
 }

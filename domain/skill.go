@@ -5,6 +5,8 @@ import (
 	"time"
 )
 
+// SkillRepository is __how__ we're going to be creating,
+// updating, deleting, and fetching our domain entity.
 type SkillRepository interface {
 	FindAll() ([]Skill, error)
 	FindById(id uuid.UUID) (Skill, error)
@@ -14,6 +16,7 @@ type SkillRepository interface {
 	ExistsByUserId(skillId uuid.UUID, userId uuid.UUID) (bool, error)
 }
 
+// Skill is the domain entity. It is __what__ we're operating on.
 type Skill struct {
 	Id             uuid.UUID `json:"id"`
 	SkillId        string    `json:"skillId" binding:"required"`
@@ -26,6 +29,7 @@ type Skill struct {
 	DateLastTxpAdd time.Time `json:"dateLastTxpAdd"`
 }
 
+// SkillPolicy receivers define the rules associated with our domain entity
 type SkillPolicy struct{}
 
 var skillTable = createSkillTable()
@@ -67,9 +71,7 @@ func createSkillTable() map[int]int {
 	return m
 }
 
-// FirstTimeTxp checks to see if there is any txp on the skill and if
-// not that the requested txp to add to the skill is less than one hour.
-// Policy: Users can only add up to an hour of txp their first time.
+// FirstTimeTxp Policy: Users can add max one hour of txp their first add.
 func (p *SkillPolicy) FirstTimeTxp(skill Skill, requestedTxp int) bool {
 	now := time.Now()
 	if skill.Txp == 0 && now.Sub(skill.DateCreated).Hours() < 1 {

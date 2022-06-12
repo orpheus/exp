@@ -9,10 +9,6 @@ import (
 	"time"
 )
 
-type Logger interface {
-	Log(message string) error
-}
-
 type SkillInteractor struct {
 	SkillRepository domain.SkillRepository
 	Policy          domain.SkillPolicy
