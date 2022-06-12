@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"github.com/gofrs/uuid"
 	"github.com/jackc/pgx/v4/pgxpool"
-	"github.com/orpheus/exp/interfaces/ginhttprouter/user"
 	"log"
 	"time"
 )
@@ -82,15 +81,4 @@ func (r *UserRepo) Create(user User, hashedPassword string) (User, error) {
 
 func (u *User) EmptyPassword() {
 	u.Password = ""
-}
-
-func (u *User) ToDTO() user.User {
-	return user.User{
-		Id:           u.Id,
-		Username:     u.Username,
-		Email:        u.Email.String,
-		RoleId:       u.RoleId.String(),
-		DateCreated:  u.DateCreated,
-		DateModified: u.DateModified,
-	}
 }

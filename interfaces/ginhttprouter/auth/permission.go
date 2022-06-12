@@ -6,21 +6,7 @@ import (
 	"strings"
 )
 
-type PermissionGuardian struct {
-	Freedoms     []Freedom
-	Restrictions []Restriction
-}
-
-type Freedom struct {
-	UriRegex  *regexp.Regexp
-	UriMethod string
-}
-
-type Restriction struct {
-	UriRegex  *regexp.Regexp
-	MethodMap map[string]string
-}
-
+// MakePermissionGuardian defines the necessary route-to-permission mappings for the whole system.
 func MakePermissionGuardian() PermissionGuardian {
 	freedoms := []Freedom{
 		open("signup", "POST"),
@@ -38,7 +24,28 @@ func MakePermissionGuardian() PermissionGuardian {
 		restrictAll("role?", "exp.role"),
 	}
 
-	return PermissionGuardian{Freedoms: freedoms, Restrictions: restrictions}
+	return &Guardian{Freedoms: freedoms, Restrictions: restrictions}
+}
+
+type PermissionGuardian interface {
+	GetPermissions() []string
+	HasOpenPermission(requestUri string, requestMethod string) bool
+	GetRequiredPermission(requestUri string, requestMethod string) string
+}
+
+type Guardian struct {
+	Freedoms     []Freedom
+	Restrictions []Restriction
+}
+
+type Freedom struct {
+	UriRegex  *regexp.Regexp
+	UriMethod string
+}
+
+type Restriction struct {
+	UriRegex  *regexp.Regexp
+	MethodMap map[string]string
 }
 
 func restrict(endpoint string, methodMap map[string]string) Restriction {
@@ -81,7 +88,7 @@ func endpointRegex(endpoint string) *regexp.Regexp {
 	return regexp.MustCompile(fmt.Sprintf("/api/%s/?.*", endpoint))
 }
 
-func (p *PermissionGuardian) GetAllPermissions() []string {
+func (p *Guardian) GetPermissions() []string {
 	var permissions []string
 
 	for _, restriction := range p.Restrictions {
@@ -93,7 +100,7 @@ func (p *PermissionGuardian) GetAllPermissions() []string {
 	return permissions
 }
 
-func (p *PermissionGuardian) HasOpenPermission(requestUri string, requestMethod string) bool {
+func (p *Guardian) HasOpenPermission(requestUri string, requestMethod string) bool {
 	for _, freedom := range p.Freedoms {
 		if freedom.UriRegex.MatchString(requestUri) {
 			return true
@@ -102,7 +109,7 @@ func (p *PermissionGuardian) HasOpenPermission(requestUri string, requestMethod 
 	return false
 }
 
-func (p *PermissionGuardian) GetRequiredPermission(requestUri string, requestMethod string) string {
+func (p *Guardian) GetRequiredPermission(requestUri string, requestMethod string) string {
 	var methodMap map[string]string
 
 	for _, restriction := range p.Restrictions {

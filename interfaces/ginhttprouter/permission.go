@@ -1,49 +1,33 @@
 package ginhttprouter
 
 import (
-	"fmt"
 	"github.com/gin-gonic/gin"
 	"github.com/orpheus/exp/interfaces/ginhttprouter/auth"
-	"github.com/orpheus/exp/interfaces/persistence/repository"
+	auth2 "github.com/orpheus/exp/usecases/auth"
 	"net/http"
 )
 
 type PermissionController struct {
-	Router   *gin.Engine
-	Repo     *repository.PermissionRepo
-	Guardian auth.PermissionGuardian
+	interactor PermissionInteractor
+	guardian   auth.PermissionGuardian
 }
 
-func (svc *PermissionController) RegisterRoutes(router *gin.RouterGroup) {
+type PermissionInteractor interface {
+	FindAll() ([]auth2.Permission, error)
+	FindById(id string) (auth2.Permission, error)
+	CreateOne(id string) (auth2.Permission, error)
+	DeleteById(id string) error
+}
+
+func (p *PermissionController) RegisterRoutes(router *gin.RouterGroup) {
 	permissions := router.Group("/permissions")
 	{
-		permissions.GET("/", svc.FindAll)
+		permissions.GET("/", p.FindAll)
 	}
 }
 
-func (svc *PermissionController) EnforcePermissions() {
-	allPermissions := svc.Guardian.GetAllPermissions()
-	existingPermissions, err := svc.Repo.FindAll()
-	if err != nil {
-		panic(err)
-	}
-	fmt.Println(existingPermissions)
-	mappedPermissions := make(map[string]bool)
-	for _, v := range existingPermissions {
-		mappedPermissions[v.Id] = true
-	}
-	for _, p := range allPermissions {
-		if !mappedPermissions[p] {
-			_, err := svc.Repo.CreateOne(p)
-			if err != nil {
-				panic(err)
-			}
-		}
-	}
-}
-
-func (svc *PermissionController) FindAll(c *gin.Context) {
-	permissions, err := svc.Repo.FindAll()
+func (p *PermissionController) FindAll(c *gin.Context) {
+	permissions, err := p.interactor.FindAll()
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return

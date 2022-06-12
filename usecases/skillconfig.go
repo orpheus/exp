@@ -2,12 +2,13 @@ package usecases
 
 import (
 	"github.com/orpheus/exp/domain"
+	"github.com/orpheus/exp/interfaces"
 )
 
 // SkillConfigInteractor Service.
 type SkillConfigInteractor struct {
 	Repo   domain.SkillConfigRepository
-	Logger Logger
+	Logger interfaces.Logger
 }
 
 func (s *SkillConfigInteractor) FindAllSkillConfigs() []domain.SkillConfig {

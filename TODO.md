@@ -1,30 +1,24 @@
-# TODO - by End Of MARCH
+# TODO
+All TODOs will be noted in this document.
 
-> Start: 3/3/22 - began refactor from kotlin
+## 2022-06-12
+### [Refactor]
+- Refactor using [clean arch](https://manuel.kiessling.net/2012/09/28/applying-the-clean-architecture-to-go-applications/)
+- Tests
 
-### Service
+### [CI/CD]
+- CI (build, test, docker-publish)
+- CD (deploy). Currently, thinking about using `skaffold`
 
+## 2022-03-04
+
+### [Refactor]
+- ~~Start: 3/3/22 - began refactor from kotlin~~
+
+### [Service]
 1. ~~SkillConfig, Skill, Txp/Level Services~~
 2. ~~Authentication (JWT) (Users)~~
 3. ~~Authorization (Roles + Permissions)~~
 4. ~~Limit 1 skill per type per account~~
 7. ~~Set max txp you can add based on last modified date~~
 5. ~~Migrations~~
-6. Tests
-
-
-### WebApp
-
-1. Setup (Typescript)
-2. LandingPage
-3. Signup/Login
-4. Skill Page
-   1. Add Skill
-   2. Show Level
-   3. Show EXP Bar
-   4. Add Exp
-
-### CI/CD
-
-1. CI (TESTS) (DOCKER BUILD + PUBLISH)
-2. CD (DEPLOY) (DNS | CLOUDFLARE)

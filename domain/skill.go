@@ -5,6 +5,10 @@ import (
 	"time"
 )
 
+var (
+	skillTable = createSkillTable()
+)
+
 // SkillRepository is __how__ we're going to be creating,
 // updating, deleting, and fetching our domain entity.
 type SkillRepository interface {
@@ -29,10 +33,28 @@ type Skill struct {
 	DateLastTxpAdd time.Time `json:"dateLastTxpAdd"`
 }
 
-// SkillPolicy receivers define the rules associated with our domain entity
-type SkillPolicy struct{}
+// SkillPolicy defines the rules associated with our Skill entity
+type SkillPolicy interface {
+	AllowFirstTimeTxpAdd(skill Skill, requestedTxp int) bool
+}
 
-var skillTable = createSkillTable()
+type SkillPolicyEnforcer struct{}
+
+// AllowFirstTimeTxpAdd Special Rule: Users can add up to an hour of Txp their first time
+// adding txp even if they created the skill less than an hour ago.
+func (p SkillPolicyEnforcer) AllowFirstTimeTxpAdd(skill Skill, requestedTxp int) bool {
+	now := time.Now()
+	if skill.IsNewSkill() && now.Sub(skill.DateCreated).Hours() < 1 {
+		if requestedTxp <= int(time.Hour.Seconds()) {
+			return true
+		}
+	}
+	return false
+}
+
+func (s Skill) IsNewSkill() bool {
+	return s.Exp == 0 && s.Txp == 0
+}
 
 func (s *Skill) AddTxp(txp int) {
 	s.Txp += txp
@@ -69,15 +91,4 @@ func createSkillTable() map[int]int {
 	}
 
 	return m
-}
-
-// FirstTimeTxp Policy: Users can add max one hour of txp their first add.
-func (p *SkillPolicy) FirstTimeTxp(skill Skill, requestedTxp int) bool {
-	now := time.Now()
-	if skill.Txp == 0 && now.Sub(skill.DateCreated).Hours() < 1 {
-		if requestedTxp <= int(time.Hour.Seconds()) {
-			return true
-		}
-	}
-	return false
 }

@@ -5,21 +5,23 @@ import (
 	"fmt"
 	"github.com/gofrs/uuid"
 	"github.com/orpheus/exp/domain"
+	"github.com/orpheus/exp/interfaces"
 	"log"
 	"time"
 )
 
+// SkillInteractor Service
 type SkillInteractor struct {
 	SkillRepository domain.SkillRepository
 	Policy          domain.SkillPolicy
-	Logger          Logger
+	Logger          interfaces.Logger
 }
 
 func (s *SkillInteractor) FindAllSkills() []domain.Skill {
 	skills, err := s.SkillRepository.FindAll()
 	if err != nil {
 		message := fmt.Errorf("%s", err.Error())
-		s.Logger.Log(message.Error())
+		_ = s.Logger.Log(message.Error())
 		return nil
 	}
 	return skills
@@ -29,7 +31,7 @@ func (s *SkillInteractor) FindSkillById(id uuid.UUID) (domain.Skill, error) {
 	skill, err := s.SkillRepository.FindById(id)
 	if err != nil {
 		err = fmt.Errorf("%s", err.Error())
-		s.Logger.Log(err.Error())
+		_ = s.Logger.Log(err.Error())
 		return skill, err
 	}
 	return skill, nil
@@ -40,7 +42,7 @@ func (s *SkillInteractor) CreateSkill(skill domain.Skill, userId uuid.UUID) (dom
 	exists, err := s.SkillRepository.ExistsByUserId(id, userId)
 	if err != nil {
 		message := fmt.Errorf("%s", err.Error())
-		s.Logger.Log(message.Error())
+		_ = s.Logger.Log(message.Error())
 	}
 
 	if exists {
@@ -85,11 +87,11 @@ func (s *SkillInteractor) AddTxp(txp int, skillId uuid.UUID) (*domain.Skill, err
 	now := time.Now()
 	last := skill.DateLastTxpAdd
 	secondsSinceLastUpdate := int(now.Sub(last).Seconds())
-	firstTxpAddBypass := s.Policy.FirstTimeTxp(skill, txp)
+	allowFirstTimeTxpAdd := s.Policy.AllowFirstTimeTxpAdd(skill, txp)
 
-	if txp > secondsSinceLastUpdate && !firstTxpAddBypass {
+	if txp > secondsSinceLastUpdate && !allowFirstTimeTxpAdd {
 		var message string
-		if skill.Txp == 0 {
+		if skill.IsNewSkill() {
 			message = "Cannot add more than 3600 txp for the first hour of the skill's lifetime"
 		} else {
 			message = "Cannot add more txp than the difference of time in seconds between now and the last update"

@@ -4,37 +4,45 @@ import (
 	"fmt"
 	"github.com/gin-gonic/gin"
 	"github.com/gofrs/uuid"
-	"github.com/orpheus/exp/interfaces/persistence/repository"
+	"github.com/orpheus/exp/usecases/auth"
 	"net/http"
 )
 
+// RoleController Controller
 type RoleController struct {
-	Router *gin.Engine
-	Repo   *repository.RoleRepo
+	interactor RoleInteractor
 }
 
-func (svc *RoleController) RegisterRoutes(router *gin.RouterGroup) {
+// RoleInteractor Interface. Lets the RoleController know what is can do
+type RoleInteractor interface {
+	FindAll() []auth.Role
+	FindById(id uuid.UUID) (auth.Role, error)
+	CreateOne(role auth.Role) (auth.Role, error)
+	DeleteById(id uuid.UUID) error
+}
+
+func (r *RoleController) RegisterRoutes(router *gin.RouterGroup) {
 	role := router.Group("/role")
 	{
-		role.GET("/", svc.FindAll)
-		role.POST("/", svc.CreateOne)
-		role.GET("/:id", svc.FindById)
-		role.DELETE("/:id", svc.DeleteById)
+		role.GET("/", r.FindAll)
+		role.POST("/", r.CreateOne)
+		role.GET("/:id", r.FindById)
+		role.DELETE("/:id", r.DeleteById)
 	}
 }
 
-func (svc *RoleController) FindAll(c *gin.Context) {
-	records := svc.Repo.FindAll()
+func (r *RoleController) FindAll(c *gin.Context) {
+	records := r.interactor.FindAll()
 	c.IndentedJSON(http.StatusOK, records)
 }
 
-func (svc *RoleController) FindById(c *gin.Context) {
+func (r *RoleController) FindById(c *gin.Context) {
 	id, err := uuid.FromString(c.Param("id"))
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
-	record, err := svc.Repo.FindById(id)
+	record, err := r.interactor.FindById(id)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{
 			"error": fmt.Sprintf("database error: %s", err.Error())},
@@ -44,13 +52,13 @@ func (svc *RoleController) FindById(c *gin.Context) {
 	c.IndentedJSON(http.StatusOK, record)
 }
 
-func (svc *RoleController) CreateOne(c *gin.Context) {
-	var reqBody repository.Role
-	if err := c.ShouldBindJSON(&reqBody); err != nil {
+func (r *RoleController) CreateOne(c *gin.Context) {
+	var role auth.Role
+	if err := c.ShouldBindJSON(&role); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
-	rec, err := svc.Repo.CreateOne(reqBody)
+	rec, err := r.interactor.CreateOne(role)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{
 			"error": fmt.Sprintf("database error: %s", err.Error())},
@@ -60,18 +68,18 @@ func (svc *RoleController) CreateOne(c *gin.Context) {
 	c.JSON(http.StatusOK, rec)
 }
 
-func (svc *RoleController) DeleteById(c *gin.Context) {
+func (r *RoleController) DeleteById(c *gin.Context) {
 	id, err := uuid.FromString(c.Param("id"))
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
-	response, err := svc.Repo.DeleteById(id)
+	err = r.interactor.DeleteById(id)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{
 			"error": fmt.Sprintf("database error: %s", err.Error())},
 		)
 		return
 	}
-	c.JSON(http.StatusOK, response)
+	c.JSON(http.StatusOK, true)
 }

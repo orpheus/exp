@@ -58,7 +58,7 @@ func RegisterRoutes(r *gin.Engine) {
 
 	// Skill
 	skillInteractor := usecases.SkillInteractor{
-		Policy: domain.SkillPolicy{},
+		Policy: domain.SkillPolicyEnforcer{},
 	}
 	skillController := SkillController{
 		service: &skillInteractor,
