@@ -1,10 +1,10 @@
-package ginhttp
+package middleware
 
 import (
 	"fmt"
 	"github.com/gin-gonic/gin"
 	"github.com/golang-jwt/jwt"
-	ginhttp "github.com/orpheus/exp/interfaces/ginhttp/auth"
+	ginhttp "github.com/orpheus/exp/interfaces/http/auth"
 	usecases "github.com/orpheus/exp/usecases/auth"
 	"net/http"
 	"strings"

@@ -4,24 +4,15 @@ import (
 	"context"
 	"fmt"
 	"github.com/gofrs/uuid"
-	"github.com/jackc/pgx/v4/pgxpool"
+	usecases "github.com/orpheus/exp/usecases/auth"
 	"log"
-	"time"
 )
 
-type Role struct {
-	Id           uuid.UUID `json:"id"`
-	Name         string    `json:"name" binding:"required"`
-	Permissions  []string  `json:"permissions" binding:"required"`
-	DateCreated  time.Time `json:"dateCreated"`
-	DateModified time.Time `json:"dateModified"`
-}
-
 type RoleRepo struct {
-	DB *pgxpool.Pool
+	DB PgxConn
 }
 
-func (svc *RoleRepo) FindAll() []Role {
+func (svc *RoleRepo) FindAll() []usecases.Role {
 	ds := "select * from role"
 	rows, err := svc.DB.Query(context.Background(), ds)
 	if err != nil {
@@ -29,9 +20,9 @@ func (svc *RoleRepo) FindAll() []Role {
 	}
 	defer rows.Close()
 
-	var records []Role
+	var records []usecases.Role
 	for rows.Next() {
-		var r Role
+		var r usecases.Role
 		err := rows.Scan(&r.Id, &r.Name, &r.Permissions, &r.DateCreated, &r.DateModified)
 		if err != nil {
 			log.Fatal(err)
@@ -46,20 +37,20 @@ func (svc *RoleRepo) FindAll() []Role {
 	return records
 }
 
-func (svc *RoleRepo) FindById(id uuid.UUID) (Role, error) {
+func (svc *RoleRepo) FindById(id uuid.UUID) (usecases.Role, error) {
 	sql := "select * from role where id = $1"
-	var r Role
+	var r usecases.Role
 	err := svc.DB.QueryRow(context.Background(), sql, id).
 		Scan(&r.Id, &r.Name, &r.Permissions, &r.DateCreated, &r.DateModified)
 	return r, err
 }
 
-func (svc *RoleRepo) CreateOne(role Role) (Role, error) {
+func (svc *RoleRepo) CreateOne(role usecases.Role) (usecases.Role, error) {
 	ds := "insert into role (name, permissions) " +
 		"VALUES ($1, $2) " +
 		"RETURNING id, name, permissions, date_created, date_modified"
 
-	var r Role
+	var r usecases.Role
 	err := svc.DB.QueryRow(context.Background(), ds, role.Name, role.Permissions).
 		Scan(&r.Id, &r.Name, &r.Permissions, &r.DateCreated, &r.DateModified)
 

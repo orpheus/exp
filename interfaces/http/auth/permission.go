@@ -1,4 +1,4 @@
-package ginauth
+package auth
 
 import (
 	"fmt"

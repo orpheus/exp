@@ -3,7 +3,7 @@ package main
 import (
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
-	"github.com/orpheus/exp/interfaces/ginhttp"
+	"github.com/orpheus/exp/interfaces/http"
 	"os"
 	"time"
 )

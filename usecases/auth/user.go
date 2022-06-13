@@ -12,6 +12,13 @@ type UserInteractor struct {
 	SkillerInteractor usecases.SkillerInteractor
 }
 
+// UserRepository is an overlay repository over Skiller. The actual
+// UserInteractor implements all of these  methods by calling its
+// SkillerInteractor and transforming into User structs.
+//
+// The reason to do this for now is to keep User and Skiller separate
+// without having them both live in the database. So for now, Skiller
+// is the source of truth and the User is the DTO wrapper.
 type UserRepository interface {
 	FindById(id uuid.UUID) (User, error)
 	FindByUsername(username string) (User, error)
