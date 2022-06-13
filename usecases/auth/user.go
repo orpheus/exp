@@ -1,4 +1,4 @@
-package auth
+package usecases
 
 import (
 	"github.com/gofrs/uuid"

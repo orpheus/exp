@@ -1,13 +1,14 @@
-package auth
+package ginauth
 
 import (
 	"fmt"
+	ucauth "github.com/orpheus/exp/usecases/auth"
 	"regexp"
 	"strings"
 )
 
 // MakePermissionGuardian defines the necessary route-to-permission mappings for the whole system.
-func MakePermissionGuardian() PermissionGuardian {
+func MakePermissionGuardian() *Guardian {
 	freedoms := []Freedom{
 		open("signup", "POST"),
 		open("login", "POST"),
@@ -28,7 +29,7 @@ func MakePermissionGuardian() PermissionGuardian {
 }
 
 type PermissionGuardian interface {
-	GetPermissions() []string
+	ucauth.PermissionGetter
 	HasOpenPermission(requestUri string, requestMethod string) bool
 	GetRequiredPermission(requestUri string, requestMethod string) string
 }

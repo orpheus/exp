@@ -1,13 +1,14 @@
-package ginhttprouter
+package ginhttp
 
 import (
 	"github.com/gin-gonic/gin"
 	"github.com/orpheus/exp/domain"
 	"github.com/orpheus/exp/usecases"
+	uca "github.com/orpheus/exp/usecases/auth"
 )
 
 func RegisterRoutes(r *gin.Engine) {
-	//permissionGuardian := auth2.MakePermissionGuardian()
+	//permissionGuardian := ginauth.MakePermissionGuardian()
 
 	v1Router := r.Group("/api")
 
@@ -32,13 +33,12 @@ func RegisterRoutes(r *gin.Engine) {
 	//roleController.RegisterRoutes(v1)
 
 	// Permissions
-	//permissionController := permission.PermissionController{
-	//	Router:   r,
-	//	Repo:     &repository2.PermissionRepo{DB: conn},
-	//	Guardian: permissionGuardian,
-	//}
-	//permissionController.RegisterRoutes(v1)
-	//permissionController.EnforcePermissions()
+	permissionInteractor := uca.PermissionInteractor{}
+	permissionController := PermissionController{
+		interactor: &permissionInteractor,
+	}
+	permissionController.RegisterRoutes(v1Router)
+	//permissionController.interactor.EnforcePermissions(permissionGuardian)
 
 	// SignOn
 	//signOnController := signon.SignOnController{

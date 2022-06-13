@@ -1,4 +1,4 @@
-package ginhttprouter
+package ginhttp
 
 import (
 	"fmt"

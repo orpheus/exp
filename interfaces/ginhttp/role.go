@@ -1,4 +1,4 @@
-package ginhttprouter
+package ginhttp
 
 import (
 	"fmt"
@@ -15,9 +15,9 @@ type RoleController struct {
 
 // RoleInteractor Interface. Lets the RoleController know what is can do
 type RoleInteractor interface {
-	FindAll() []auth.Role
-	FindById(id uuid.UUID) (auth.Role, error)
-	CreateOne(role auth.Role) (auth.Role, error)
+	FindAll() []usecases.Role
+	FindById(id uuid.UUID) (usecases.Role, error)
+	CreateOne(role usecases.Role) (usecases.Role, error)
 	DeleteById(id uuid.UUID) error
 }
 
@@ -53,7 +53,7 @@ func (r *RoleController) FindById(c *gin.Context) {
 }
 
 func (r *RoleController) CreateOne(c *gin.Context) {
-	var role auth.Role
+	var role usecases.Role
 	if err := c.ShouldBindJSON(&role); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return

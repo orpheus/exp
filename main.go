@@ -3,7 +3,7 @@ package main
 import (
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
-	"github.com/orpheus/exp/interfaces/ginhttprouter"
+	"github.com/orpheus/exp/interfaces/ginhttp"
 	"os"
 	"time"
 )
@@ -57,7 +57,7 @@ func main() {
 		MaxAge:           12 * time.Hour,
 	}))
 
-	ginhttprouter.RegisterRoutes(r)
+	ginhttp.RegisterRoutes(r)
 
 	err := r.Run()
 	if err != nil {

@@ -1,9 +1,8 @@
-package auth
+package usecases
 
 import (
 	"fmt"
 	"github.com/orpheus/exp/interfaces"
-	"github.com/orpheus/exp/interfaces/ginhttprouter/auth"
 	"time"
 )
 
@@ -38,9 +37,16 @@ func (p *PermissionInteractor) DeleteById(id string) error {
 	return p.PermissionRepository.DeleteById(id)
 }
 
+// PermissionGetter acts as a base for PermissionGuardians and
+// Permission stores. It returns a slice of strings used as the
+// names or ids of your system's permissions.
+type PermissionGetter interface {
+	GetPermissions() []string
+}
+
 // EnforcePermissions creates the default/necessary system permissions
-func (p *PermissionInteractor) EnforcePermissions(guardian auth.PermissionGuardian) {
-	allPermissions := guardian.GetPermissions()
+func (p *PermissionInteractor) EnforcePermissions(pg PermissionGetter) {
+	allPermissions := pg.GetPermissions()
 	existingPermissions, err := p.FindAll()
 	if err != nil {
 		panic(err)

@@ -1,16 +1,16 @@
-package middleware
+package ginhttp
 
 import (
 	"fmt"
 	"github.com/gin-gonic/gin"
 	"github.com/golang-jwt/jwt"
-	auth2 "github.com/orpheus/exp/interfaces/ginhttprouter/auth"
-	"github.com/orpheus/exp/usecases/auth"
+	ginhttp "github.com/orpheus/exp/interfaces/ginhttp/auth"
+	usecases "github.com/orpheus/exp/usecases/auth"
 	"net/http"
 	"strings"
 )
 
-func AuthGuardian(guardian auth2.PermissionGuardian) gin.HandlerFunc {
+func AuthGuardian(guardian ginhttp.PermissionGuardian) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		if guardian.HasOpenPermission(c.Request.RequestURI, c.Request.Method) {
 			return
@@ -29,7 +29,7 @@ func AuthGuardian(guardian auth2.PermissionGuardian) gin.HandlerFunc {
 		}
 		tokenString := strings.TrimSpace(authHeader[len(BearerSchema):])
 
-		token, err := auth.JWTAuthService().ValidateToken(tokenString)
+		token, err := usecases.JWTAuthService().ValidateToken(tokenString)
 		if err != nil {
 			fmt.Println(err)
 			c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
@@ -47,7 +47,7 @@ func AuthGuardian(guardian auth2.PermissionGuardian) gin.HandlerFunc {
 		scope := claims["scope"].([]interface{})
 		hasPermission := false
 		for _, p := range scope {
-			hasPermission = auth2.HasPermission(requiredPermission, p.(string))
+			hasPermission = ginhttp.HasPermission(requiredPermission, p.(string))
 			if hasPermission {
 				break
 			}

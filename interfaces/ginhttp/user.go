@@ -1,4 +1,4 @@
-package ginhttprouter
+package ginhttp
 
 import (
 	"github.com/gin-gonic/gin"
@@ -13,7 +13,7 @@ type UserController struct {
 
 // UserInteractor Service Interface
 type UserInteractor interface {
-	FindAll() ([]auth.User, error)
+	FindAll() ([]usecases.User, error)
 }
 
 // RegisterRoutes defines the route group for /user

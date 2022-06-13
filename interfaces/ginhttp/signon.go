@@ -1,4 +1,4 @@
-package ginhttprouter
+package ginhttp
 
 import (
 	"github.com/gin-gonic/gin"
@@ -12,8 +12,8 @@ type SignOnController struct {
 }
 
 type SignOnInteractor interface {
-	Login(username string, password string) (auth.User, error)
-	SignUp(user auth.User) (auth.User, error)
+	Login(username string, password string) (usecases.User, error)
+	SignUp(user usecases.User) (usecases.User, error)
 }
 
 // RegisterRoutes registers a route group for login and signup apis
@@ -41,7 +41,7 @@ func (s *SignOnController) Login(c *gin.Context) {
 }
 
 func (s *SignOnController) SignUp(c *gin.Context) {
-	var newUser auth.User
+	var newUser usecases.User
 
 	err := c.ShouldBind(&newUser)
 	if err != nil {

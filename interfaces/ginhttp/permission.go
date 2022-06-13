@@ -1,22 +1,21 @@
-package ginhttprouter
+package ginhttp
 
 import (
 	"github.com/gin-gonic/gin"
-	"github.com/orpheus/exp/interfaces/ginhttprouter/auth"
-	auth2 "github.com/orpheus/exp/usecases/auth"
+	ucauth "github.com/orpheus/exp/usecases/auth"
 	"net/http"
 )
 
 type PermissionController struct {
 	interactor PermissionInteractor
-	guardian   auth.PermissionGuardian
 }
 
 type PermissionInteractor interface {
-	FindAll() ([]auth2.Permission, error)
-	FindById(id string) (auth2.Permission, error)
-	CreateOne(id string) (auth2.Permission, error)
+	FindAll() ([]ucauth.Permission, error)
+	FindById(id string) (ucauth.Permission, error)
+	CreateOne(id string) (ucauth.Permission, error)
 	DeleteById(id string) error
+	EnforcePermissions(pg ucauth.PermissionGetter)
 }
 
 func (p *PermissionController) RegisterRoutes(router *gin.RouterGroup) {
