@@ -38,8 +38,7 @@ func (s *SkillInteractor) FindSkillById(id uuid.UUID) (domain.Skill, error) {
 }
 
 func (s *SkillInteractor) CreateSkill(skill domain.Skill, userId uuid.UUID) (domain.Skill, error) {
-	id, _ := uuid.FromString(skill.SkillId)
-	exists, err := s.SkillRepository.ExistsByUserId(id, userId)
+	exists, err := s.SkillRepository.ExistsBySkillIdAndUserId(skill.SkillId, userId)
 	if err != nil {
 		message := fmt.Errorf("%s", err.Error())
 		s.Logger.Log(message.Error())
@@ -70,8 +69,8 @@ func (s *SkillInteractor) DeleteById(skillId uuid.UUID) error {
 	return nil
 }
 
-func (s *SkillInteractor) ExistsByUserId(skillId uuid.UUID, userId uuid.UUID) (bool, error) {
-	return s.SkillRepository.ExistsByUserId(skillId, userId)
+func (s *SkillInteractor) ExistsBySkillIdAndUserId(skillId string, userId uuid.UUID) (bool, error) {
+	return s.SkillRepository.ExistsBySkillIdAndUserId(skillId, userId)
 }
 
 func (s *SkillInteractor) AddTxp(txp int, skillId uuid.UUID) (*domain.Skill, error) {
@@ -81,7 +80,7 @@ func (s *SkillInteractor) AddTxp(txp int, skillId uuid.UUID) (*domain.Skill, err
 	}
 
 	if txp <= 0 {
-		return nil, errors.New("received txp less than or equal to 0")
+		return nil, errors.New("cannot add txp less than or equal to 0")
 	}
 
 	now := time.Now()

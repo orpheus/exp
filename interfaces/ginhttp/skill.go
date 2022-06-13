@@ -6,6 +6,7 @@ import (
 	"github.com/gofrs/uuid"
 	"github.com/jackc/pgx/v4"
 	"github.com/orpheus/exp/domain"
+	"github.com/orpheus/exp/interfaces"
 	"github.com/pkg/errors"
 	"log"
 	"net/http"
@@ -18,7 +19,8 @@ import (
 // service to handle the domain/business logic. The SkillController handlers
 // will take care of request parsing.
 type SkillController struct {
-	service SkillInteractor
+	Interactor SkillInteractor
+	Logger     interfaces.Logger
 }
 
 // SkillInteractor interface tells the SkillController what kind of object to expect.
@@ -29,7 +31,7 @@ type SkillInteractor interface {
 	FindSkillById(id uuid.UUID) (domain.Skill, error)
 	CreateSkill(skill domain.Skill, userId uuid.UUID) (domain.Skill, error)
 	DeleteById(skillId uuid.UUID) error
-	ExistsByUserId(skillId uuid.UUID, userId uuid.UUID) (bool, error)
+	ExistsBySkillIdAndUserId(skillId string, userId uuid.UUID) (bool, error)
 	AddTxp(txp int, skillId uuid.UUID) (*domain.Skill, error)
 }
 
@@ -47,25 +49,26 @@ func (s *SkillController) RegisterRoutes(router *gin.RouterGroup) {
 }
 
 func (s *SkillController) FindAllSkills(c *gin.Context) {
-	skills := s.service.FindAllSkills()
+	skills := s.Interactor.FindAllSkills()
 	c.JSON(http.StatusOK, skills)
 }
 
 func (s *SkillController) FindSkillById(c *gin.Context) {
 	id, err := uuid.FromString(c.Param("id"))
 	if err != nil {
-		log.Fatalf("failed to parse UUID %q: %v", s, err)
+		msg := fmt.Sprintf("failed to parse skill id. %s", err)
+		c.JSON(http.StatusBadRequest, msg)
+		return
 	}
-	log.Printf("successfully parsed UUID %v", id)
-	skill, err := s.service.FindSkillById(id)
+	s.Logger.Logf("successfully parsed UUID %v", id)
+
+	skill, err := s.Interactor.FindSkillById(id)
 	if err != nil {
 		if errors.As(err, &pgx.ErrNoRows) {
 			c.JSON(http.StatusNotFound, fmt.Sprintf("Skill %s not found", id))
 			return
 		}
-		c.JSON(http.StatusInternalServerError, gin.H{
-			"error": fmt.Sprintf("database error: %s", err.Error())},
-		)
+		c.JSON(http.StatusInternalServerError, fmt.Sprintf("%s", err.Error()))
 		return
 	}
 	c.IndentedJSON(http.StatusOK, skill)
@@ -92,24 +95,14 @@ func (s *SkillController) CreateSkill(c *gin.Context) {
 		return
 	}
 
-	skillUUID, _ := uuid.FromString(skill.SkillId)
-	exists, err = s.service.ExistsByUserId(skillUUID, userUuid)
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-		return
-	}
-	if exists {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Skill already exists for user"})
-		return
-	}
-
-	rec, err := s.service.CreateSkill(skill, userUuid)
+	rec, err := s.Interactor.CreateSkill(skill, userUuid)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{
-			"error": fmt.Sprintf("database error: %s", err.Error())},
+			"error": fmt.Sprintf("%s", err.Error())},
 		)
 		return
 	}
+
 	c.JSON(http.StatusOK, rec)
 }
 
@@ -129,10 +122,10 @@ func (s *SkillController) AddTxp(c *gin.Context) {
 		return
 	}
 
-	updatedSkill, err := s.service.AddTxp(txp, skillId)
+	updatedSkill, err := s.Interactor.AddTxp(txp, skillId)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{
-			"error": fmt.Sprintf("database error: %s", err.Error())},
+			"error": fmt.Sprintf("%s", err.Error())},
 		)
 		return
 	}
@@ -146,10 +139,10 @@ func (s *SkillController) DeleteById(c *gin.Context) {
 		log.Fatalf("failed to parse UUID %q: %v", s, err)
 	}
 
-	err = s.service.DeleteById(skillId)
+	err = s.Interactor.DeleteById(skillId)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{
-			"error": fmt.Sprintf("database error: %s", err.Error())},
+			"error": fmt.Sprintf("%s", err.Error())},
 		)
 		return
 	}

@@ -1,4 +1,4 @@
-package db
+package postgres
 
 import (
 	"context"
@@ -12,19 +12,20 @@ import (
 )
 
 func Migrate(conn *pgxpool.Pool) {
-	files, err := ioutil.ReadDir("db/sql")
+	sqlPath := "infrastructure/postgres/sql"
+	files, err := ioutil.ReadDir(sqlPath)
 	if err != nil {
-		log.Fatalf("Failed to read db/sql dir in migarte: %s", err.Error())
+		log.Fatalf("Can not find sql at sqlPath (%s): %s", sqlPath, err.Error())
 	}
 
 	tx, err := conn.BeginTx(context.TODO(), pgx.TxOptions{})
 	if err != nil {
-		log.Fatalln("Failed to create TX in migration")
+		log.Fatalln("Failed to create TX in migration: ", err)
 	}
 	defer func() {
 		if err != nil {
 			tx.Rollback(context.TODO())
-			fmt.Println("Rolled back migration")
+			fmt.Println("Rolled back migration: ", err)
 		} else {
 			tx.Commit(context.TODO())
 			fmt.Println("Committed migrations")
@@ -48,7 +49,7 @@ func Migrate(conn *pgxpool.Pool) {
 		}
 		versions[version] = fn
 
-		c, ioErr := ioutil.ReadFile(fmt.Sprintf("db/sql/%s", fn))
+		c, ioErr := ioutil.ReadFile(fmt.Sprintf("%s/%s", sqlPath, fn))
 		if ioErr != nil {
 			log.Fatalf("Could not read sql file: %s", fn)
 		}

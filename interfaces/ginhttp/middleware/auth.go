@@ -4,13 +4,13 @@ import (
 	"fmt"
 	"github.com/gin-gonic/gin"
 	"github.com/golang-jwt/jwt"
-	ginhttp "github.com/orpheus/exp/interfaces/http/auth"
+	"github.com/orpheus/exp/interfaces/ginhttp/auth"
 	usecases "github.com/orpheus/exp/usecases/auth"
 	"net/http"
 	"strings"
 )
 
-func AuthGuardian(guardian ginhttp.PermissionGuardian) gin.HandlerFunc {
+func AuthGuardian(guardian auth.PermissionGuardian) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		if guardian.HasOpenPermission(c.Request.RequestURI, c.Request.Method) {
 			return
@@ -47,7 +47,7 @@ func AuthGuardian(guardian ginhttp.PermissionGuardian) gin.HandlerFunc {
 		scope := claims["scope"].([]interface{})
 		hasPermission := false
 		for _, p := range scope {
-			hasPermission = ginhttp.HasPermission(requiredPermission, p.(string))
+			hasPermission = auth.HasPermission(requiredPermission, p.(string))
 			if hasPermission {
 				break
 			}

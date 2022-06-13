@@ -17,7 +17,7 @@ type SkillRepository interface {
 	CreateOne(skill Skill) (Skill, error)
 	DeleteById(id uuid.UUID) (string, error)
 	UpdateExpLvl(skill Skill) (Skill, error)
-	ExistsByUserId(skillId uuid.UUID, userId uuid.UUID) (bool, error)
+	ExistsBySkillIdAndUserId(skillId string, userId uuid.UUID) (bool, error)
 }
 
 // Skill is the domain entity. It is __what__ we're operating on.

@@ -5,15 +5,17 @@ import (
 	"fmt"
 	"github.com/gofrs/uuid"
 	"github.com/orpheus/exp/domain"
+	"github.com/orpheus/exp/interfaces"
 	"log"
 	"time"
 )
 
-type SkillRepo struct {
-	DB PgxConn
+type SkillRepository struct {
+	DB     PgxConn
+	Logger interfaces.Logger
 }
 
-func (s *SkillRepo) FindAll() ([]domain.Skill, error) {
+func (s *SkillRepository) FindAll() ([]domain.Skill, error) {
 	rows, err := s.DB.Query(context.Background(), "select * from skill")
 	if err != nil {
 		return nil, err
@@ -40,7 +42,7 @@ func (s *SkillRepo) FindAll() ([]domain.Skill, error) {
 	return skills, nil
 }
 
-func (s *SkillRepo) FindById(id uuid.UUID) (domain.Skill, error) {
+func (s *SkillRepository) FindById(id uuid.UUID) (domain.Skill, error) {
 	sql := "select * from skill where id = $1"
 	var skill domain.Skill
 	err := s.DB.QueryRow(context.Background(), sql, id).
@@ -48,7 +50,7 @@ func (s *SkillRepo) FindById(id uuid.UUID) (domain.Skill, error) {
 	return skill, err
 }
 
-func (s *SkillRepo) CreateOne(skill domain.Skill) (domain.Skill, error) {
+func (s *SkillRepository) CreateOne(skill domain.Skill) (domain.Skill, error) {
 	sql := "insert into skill (skill_id, user_id, exp, txp, level, date_created, date_modified) " +
 		"VALUES ($1, $2, $3, $4, $5, $6, $7) " +
 		"RETURNING id, skill_id, user_id, exp, txp, level, date_created, date_modified, date_last_txp_add"
@@ -61,14 +63,14 @@ func (s *SkillRepo) CreateOne(skill domain.Skill) (domain.Skill, error) {
 	return sk, err
 }
 
-func (s *SkillRepo) DeleteById(id uuid.UUID) (string, error) {
+func (s *SkillRepository) DeleteById(id uuid.UUID) (string, error) {
 	// TODO(Check if exists first, so you can let client know he did what was expected)
 	sql := "delete from skill where id = $1"
 	_, err := s.DB.Exec(context.Background(), sql, id)
 	return fmt.Sprintf("Deleted Skill with id: %v", id), err
 }
 
-func (s *SkillRepo) UpdateExpLvl(skill domain.Skill) (domain.Skill, error) {
+func (s *SkillRepository) UpdateExpLvl(skill domain.Skill) (domain.Skill, error) {
 	sql := "update skill set exp = $1, txp = $2, level = $3, date_modified = $4, date_last_txp_add = $5 where id = $6 " +
 		"RETURNING id, skill_id, user_id, exp, txp, level, date_created, date_modified, date_last_txp_add"
 
@@ -78,7 +80,7 @@ func (s *SkillRepo) UpdateExpLvl(skill domain.Skill) (domain.Skill, error) {
 	return sk, err
 }
 
-func (s *SkillRepo) ExistsByUserId(skillId string, userId uuid.UUID) (bool, error) {
+func (s *SkillRepository) ExistsBySkillIdAndUserId(skillId string, userId uuid.UUID) (bool, error) {
 	ds := "select exists (select true from skill where skill_id=$1 and user_id=$2)"
 	var b bool
 	err := s.DB.QueryRow(context.Background(), ds, skillId, userId).

@@ -2,12 +2,14 @@ package ginhttp
 
 import (
 	"github.com/gin-gonic/gin"
+	"github.com/orpheus/exp/interfaces"
 	ucauth "github.com/orpheus/exp/usecases/auth"
 	"net/http"
 )
 
 type PermissionController struct {
-	interactor PermissionInteractor
+	Interactor PermissionInteractor
+	Logger     interfaces.Logger
 }
 
 type PermissionInteractor interface {
@@ -26,7 +28,7 @@ func (p *PermissionController) RegisterRoutes(router *gin.RouterGroup) {
 }
 
 func (p *PermissionController) FindAll(c *gin.Context) {
-	permissions, err := p.interactor.FindAll()
+	permissions, err := p.Interactor.FindAll()
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return

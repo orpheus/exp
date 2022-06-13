@@ -10,12 +10,12 @@ import (
 	"time"
 )
 
-type SkillerRepo struct {
+type SkillerRepository struct {
 	DB     PgxConn
 	Logger interfaces.Logger
 }
 
-func (r *SkillerRepo) FindAll() ([]domain.Skiller, error) {
+func (r *SkillerRepository) FindAll() ([]domain.Skiller, error) {
 	userRows, err := r.DB.Query(context.Background(), "select * from user_account")
 	if err != nil {
 		return nil, err
@@ -38,19 +38,23 @@ func (r *SkillerRepo) FindAll() ([]domain.Skiller, error) {
 	return users, nil
 }
 
-func (r *SkillerRepo) FindByUsername(username string) (domain.Skiller, error) {
+func (r *SkillerRepository) FindByUsername(username string) (domain.Skiller, error) {
 	ds := "select * from user_account where username = $1"
 
 	var u domain.Skiller
 	err := r.DB.QueryRow(context.Background(), ds, username).
-		Scan(&u.Id, &u.Username, &u.Email, &u.RoleId, &u.DateCreated, &u.DateModified)
+		Scan(&u.Id, &u.Username, &u.Password, &u.Email, &u.RoleId, &u.DateCreated, &u.DateModified)
 
-	r.Logger.Log(fmt.Sprintf("%s", u))
+	if err != nil {
+		err = fmt.Errorf("db scan failed for Skiller in repository.skiller.FindByUsername: %s", err.Error())
+		r.Logger.Log(err.Error())
+		return domain.Skiller{}, err
+	}
 
-	return u, err
+	return u, nil
 }
 
-func (r *SkillerRepo) FindByEmail(email string) (domain.Skiller, error) {
+func (r *SkillerRepository) FindByEmail(email string) (domain.Skiller, error) {
 	ds := "select * from user_account where email = $1"
 
 	var u domain.Skiller
@@ -62,7 +66,7 @@ func (r *SkillerRepo) FindByEmail(email string) (domain.Skiller, error) {
 	return u, err
 }
 
-func (r *SkillerRepo) FindById(id uuid.UUID) (domain.Skiller, error) {
+func (r *SkillerRepository) FindById(id uuid.UUID) (domain.Skiller, error) {
 	ds := "select * from user_account where id = $1"
 
 	var u domain.Skiller
@@ -75,13 +79,13 @@ func (r *SkillerRepo) FindById(id uuid.UUID) (domain.Skiller, error) {
 }
 
 // CreateOne TODO(Handle Email)
-func (r *SkillerRepo) CreateOne(user domain.Skiller, hashedPassword string) (domain.Skiller, error) {
+func (r *SkillerRepository) CreateOne(skiller domain.Skiller) (domain.Skiller, error) {
 	ds := "insert into user_account (username, password, email, role_id, date_created, date_modified) " +
 		"VALUES($1, $2, $3, $4, $5, $6) " +
 		"RETURNING id, username, email, role_id, date_created, date_modified"
 
 	var u domain.Skiller
-	err := r.DB.QueryRow(context.Background(), ds, user.Username, hashedPassword, user.Email, user.RoleId, time.Now(), time.Now()).
+	err := r.DB.QueryRow(context.Background(), ds, skiller.Username, skiller.Password, skiller.Email, skiller.RoleId, time.Now(), time.Now()).
 		Scan(&u.Id, &u.Username, &u.Email, &u.RoleId, &u.DateCreated, &u.DateModified)
 
 	return u, err

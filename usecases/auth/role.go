@@ -6,6 +6,12 @@ import (
 	"time"
 )
 
+// RoleInteractor Service
+type RoleInteractor struct {
+	RoleRepository RoleRepository
+	Logger         interfaces.Logger
+}
+
 // RoleRepository Persistence Interface
 type RoleRepository interface {
 	FindAll() []Role
@@ -21,12 +27,6 @@ type Role struct {
 	Permissions  []string  `json:"permissions" binding:"required"`
 	DateCreated  time.Time `json:"dateCreated"`
 	DateModified time.Time `json:"dateModified"`
-}
-
-// RoleInteractor Service
-type RoleInteractor struct {
-	RoleRepository RoleRepository
-	Logger         interfaces.Logger
 }
 
 func (r *RoleInteractor) FindAll() []Role {

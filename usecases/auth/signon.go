@@ -14,13 +14,24 @@ type SignOnInteractor struct {
 	Logger         interfaces.Logger
 }
 
+type SignOnRepository interface {
+	Login(username string, password string) (User, error)
+	SignUp(user User) (User, error)
+}
+
 func (s *SignOnInteractor) Login(username string, password string) (User, error) {
 	user, err := s.UserRepository.FindByUsername(username)
+	if err != nil {
+		return User{}, err
+	}
 
 	// Compare the stored hashed password, with the hashed version of the password that was received
 	if err = bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(password)); err != nil {
 		return User{}, errors.New("unauthorized")
 	}
+
+	// After we've verified the password, remove it, so it doesn't get sent over the wire
+	user.RemovePassword()
 
 	role, err := s.RoleRepository.FindById(user.RoleId)
 	if err != nil {
@@ -53,7 +64,7 @@ func (s *SignOnInteractor) SignUp(user User) (User, error) {
 	user.Password = string(hashedPassword)
 	createdUser, err := s.UserRepository.CreateOne(user)
 	if err != nil {
-		return User{}, nil
+		return User{}, err
 	}
 
 	createdUser.RemovePassword()

@@ -2,13 +2,15 @@ package ginhttp
 
 import (
 	"github.com/gin-gonic/gin"
+	"github.com/orpheus/exp/interfaces"
 	"github.com/orpheus/exp/usecases/auth"
 	"net/http"
 )
 
 // SignOnController Controller
 type SignOnController struct {
-	UserInteractor SignOnInteractor
+	Interactor SignOnInteractor
+	Logger     interfaces.Logger
 }
 
 type SignOnInteractor interface {
@@ -31,7 +33,7 @@ func (s *SignOnController) Login(c *gin.Context) {
 		return
 	}
 
-	user, err := s.UserInteractor.Login(username, password)
+	user, err := s.Interactor.Login(username, password)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
@@ -49,7 +51,7 @@ func (s *SignOnController) SignUp(c *gin.Context) {
 		return
 	}
 
-	user, err := s.UserInteractor.SignUp(newUser)
+	user, err := s.Interactor.SignUp(newUser)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return

@@ -1,14 +1,19 @@
 # TODO
 All TODOs will be noted in this document.
 
-## 2022-06-12
-### [Refactor]
-- Refactor using [clean arch](https://manuel.kiessling.net/2012/09/28/applying-the-clean-architecture-to-go-applications/)
-- Tests
+## 2022-06-13
+### [Service]
+- check if given permissions exist before creating a role
+- tests
 
 ### [CI/CD]
 - CI (build, test, docker-publish)
 - CD (deploy). Currently, thinking about using `skaffold`
+
+## 2022-06-12
+### [Refactor]
+- ~~Refactor using~~ 
+  - [clean arch](https://manuel.kiessling.net/2012/09/28/applying-the-clean-architecture-to-go-applications/)
 
 ## 2022-03-04
 

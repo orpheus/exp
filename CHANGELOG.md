@@ -21,6 +21,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - custom `migrate.go` script to load sql migrations into db
 
 ### Changed
+- refactored app to use 'Clean Arch' based on Robert Martin's Clean design philosophy
+    - figured I'd try it out. so far I love the separation of the domain
 ### Fixed
 ### Removed
 

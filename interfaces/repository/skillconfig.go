@@ -4,15 +4,17 @@ import (
 	"context"
 	"fmt"
 	"github.com/orpheus/exp/domain"
+	"github.com/orpheus/exp/interfaces"
 	"log"
 	"strings"
 )
 
-type SkillConfigRepo struct {
-	DB PgxConn
+type SkillConfigRepository struct {
+	DB     PgxConn
+	Logger interfaces.Logger
 }
 
-func (s *SkillConfigRepo) FindAll() []domain.SkillConfig {
+func (s *SkillConfigRepository) FindAll() []domain.SkillConfig {
 	skillConfigRows, err := s.DB.Query(context.Background(), "select * from skill_config")
 	if err != nil {
 		panic(err)
@@ -36,7 +38,7 @@ func (s *SkillConfigRepo) FindAll() []domain.SkillConfig {
 	return skillConfigs
 }
 
-func (s *SkillConfigRepo) FindById(id string) (domain.SkillConfig, error) {
+func (s *SkillConfigRepository) FindById(id string) (domain.SkillConfig, error) {
 	r := new(domain.SkillConfig)
 	err := s.DB.QueryRow(
 		context.Background(),
@@ -45,7 +47,7 @@ func (s *SkillConfigRepo) FindById(id string) (domain.SkillConfig, error) {
 	return *r, err
 }
 
-func (s *SkillConfigRepo) CreateOne(skillConfig domain.SkillConfig) (domain.SkillConfig, error) {
+func (s *SkillConfigRepository) CreateOne(skillConfig domain.SkillConfig) (domain.SkillConfig, error) {
 	fmtStr := "insert into skill_config (id, name, description) VALUES ('%s', '%s', '%s') RETURNING id, name, description"
 	sql := fmt.Sprintf(fmtStr, skillConfig.Id, skillConfig.Name, skillConfig.Description)
 	r := new(domain.SkillConfig)
@@ -56,7 +58,7 @@ func (s *SkillConfigRepo) CreateOne(skillConfig domain.SkillConfig) (domain.Skil
 	return *r, err
 }
 
-func (s *SkillConfigRepo) CreateMany(skillConfigs []domain.SkillConfig) error {
+func (s *SkillConfigRepository) CreateMany(skillConfigs []domain.SkillConfig) error {
 	// Create query string for insert many
 	sqlBase := "insert into skill_config (id, name, description) VALUES %s RETURNING id, name, description"
 	var sqlValues []string
@@ -67,7 +69,7 @@ func (s *SkillConfigRepo) CreateMany(skillConfigs []domain.SkillConfig) error {
 	sqlValuesJoined := strings.Join(sqlValues, ", ")
 	sql := fmt.Sprintf(sqlBase, sqlValuesJoined)
 
-	// Query db
+	// Query pgx
 	_, err := s.DB.Exec(context.Background(), sql)
 	if err != nil {
 		return err
@@ -75,7 +77,7 @@ func (s *SkillConfigRepo) CreateMany(skillConfigs []domain.SkillConfig) error {
 	return nil
 }
 
-func (s *SkillConfigRepo) DeleteById(id string) error {
+func (s *SkillConfigRepository) DeleteById(id string) error {
 	sql := fmt.Sprintf("delete from skill_config where id = '%s'", id)
 	fmt.Println(sql)
 	_, err := s.DB.Query(context.Background(), sql)

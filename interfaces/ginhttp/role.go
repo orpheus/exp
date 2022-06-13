@@ -4,13 +4,15 @@ import (
 	"fmt"
 	"github.com/gin-gonic/gin"
 	"github.com/gofrs/uuid"
+	"github.com/orpheus/exp/interfaces"
 	"github.com/orpheus/exp/usecases/auth"
 	"net/http"
 )
 
 // RoleController Controller
 type RoleController struct {
-	interactor RoleInteractor
+	Interactor RoleInteractor
+	Logger     interfaces.Logger
 }
 
 // RoleInteractor Interface. Lets the RoleController know what is can do
@@ -32,7 +34,7 @@ func (r *RoleController) RegisterRoutes(router *gin.RouterGroup) {
 }
 
 func (r *RoleController) FindAll(c *gin.Context) {
-	records := r.interactor.FindAll()
+	records := r.Interactor.FindAll()
 	c.IndentedJSON(http.StatusOK, records)
 }
 
@@ -42,10 +44,10 @@ func (r *RoleController) FindById(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
-	record, err := r.interactor.FindById(id)
+	record, err := r.Interactor.FindById(id)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{
-			"error": fmt.Sprintf("database error: %s", err.Error())},
+			"error": fmt.Sprintf("%s", err.Error())},
 		)
 		return
 	}
@@ -58,10 +60,10 @@ func (r *RoleController) CreateOne(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
-	rec, err := r.interactor.CreateOne(role)
+	rec, err := r.Interactor.CreateOne(role)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{
-			"error": fmt.Sprintf("database error: %s", err.Error())},
+			"error": fmt.Sprintf("%s", err.Error())},
 		)
 		return
 	}
@@ -74,10 +76,10 @@ func (r *RoleController) DeleteById(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
-	err = r.interactor.DeleteById(id)
+	err = r.Interactor.DeleteById(id)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{
-			"error": fmt.Sprintf("database error: %s", err.Error())},
+			"error": fmt.Sprintf("%s", err.Error())},
 		)
 		return
 	}

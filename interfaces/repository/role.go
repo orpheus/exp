@@ -4,17 +4,19 @@ import (
 	"context"
 	"fmt"
 	"github.com/gofrs/uuid"
+	"github.com/orpheus/exp/interfaces"
 	usecases "github.com/orpheus/exp/usecases/auth"
 	"log"
 )
 
-type RoleRepo struct {
-	DB PgxConn
+type RoleRepository struct {
+	DB     PgxConn
+	Logger interfaces.Logger
 }
 
-func (svc *RoleRepo) FindAll() []usecases.Role {
+func (r *RoleRepository) FindAll() []usecases.Role {
 	ds := "select * from role"
-	rows, err := svc.DB.Query(context.Background(), ds)
+	rows, err := r.DB.Query(context.Background(), ds)
 	if err != nil {
 		panic(err)
 	}
@@ -37,28 +39,28 @@ func (svc *RoleRepo) FindAll() []usecases.Role {
 	return records
 }
 
-func (svc *RoleRepo) FindById(id uuid.UUID) (usecases.Role, error) {
+func (r *RoleRepository) FindById(id uuid.UUID) (usecases.Role, error) {
 	sql := "select * from role where id = $1"
-	var r usecases.Role
-	err := svc.DB.QueryRow(context.Background(), sql, id).
-		Scan(&r.Id, &r.Name, &r.Permissions, &r.DateCreated, &r.DateModified)
-	return r, err
+	var role usecases.Role
+	err := r.DB.QueryRow(context.Background(), sql, id).
+		Scan(&role.Id, &role.Name, &role.Permissions, &role.DateCreated, &role.DateModified)
+	return role, err
 }
 
-func (svc *RoleRepo) CreateOne(role usecases.Role) (usecases.Role, error) {
+func (r *RoleRepository) CreateOne(role usecases.Role) (usecases.Role, error) {
 	ds := "insert into role (name, permissions) " +
 		"VALUES ($1, $2) " +
 		"RETURNING id, name, permissions, date_created, date_modified"
 
-	var r usecases.Role
-	err := svc.DB.QueryRow(context.Background(), ds, role.Name, role.Permissions).
-		Scan(&r.Id, &r.Name, &r.Permissions, &r.DateCreated, &r.DateModified)
+	var newRole usecases.Role
+	err := r.DB.QueryRow(context.Background(), ds, role.Name, role.Permissions).
+		Scan(&newRole.Id, &newRole.Name, &newRole.Permissions, &newRole.DateCreated, &newRole.DateModified)
 
-	return r, err
+	return newRole, err
 }
 
-func (svc *RoleRepo) DeleteById(id uuid.UUID) (string, error) {
+func (r *RoleRepository) DeleteById(id uuid.UUID) error {
 	ds := "delete from role where id = $1"
-	_, err := svc.DB.Exec(context.Background(), ds, id)
-	return fmt.Sprintf("Deleted Role with id: %v", id), err
+	_, err := r.DB.Exec(context.Background(), ds, id)
+	return err
 }

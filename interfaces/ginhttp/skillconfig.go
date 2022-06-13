@@ -4,12 +4,14 @@ import (
 	"fmt"
 	"github.com/gin-gonic/gin"
 	"github.com/orpheus/exp/domain"
+	"github.com/orpheus/exp/interfaces"
 	"net/http"
 )
 
 // SkillConfigController Controller.
 type SkillConfigController struct {
-	interactor SkillConfigInteractor
+	Interactor SkillConfigInteractor
+	Logger     interfaces.Logger
 }
 
 // SkillConfigInteractor Service Interface.
@@ -38,16 +40,16 @@ func (s *SkillConfigController) RegisterRoutes(router *gin.RouterGroup) {
 }
 
 func (s *SkillConfigController) FindAllSkillConfigs(c *gin.Context) {
-	skillConfigs := s.interactor.FindAllSkillConfigs()
+	skillConfigs := s.Interactor.FindAllSkillConfigs()
 	c.IndentedJSON(http.StatusOK, skillConfigs)
 }
 
 func (s *SkillConfigController) FindSkillConfigById(c *gin.Context) {
 	id := c.Param("id")
-	skillConfigs, err := s.interactor.FindSkillConfigById(id)
+	skillConfigs, err := s.Interactor.FindSkillConfigById(id)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{
-			"error": fmt.Sprintf("database error: %s", err.Error())},
+			"error": fmt.Sprintf("%s", err.Error())},
 		)
 		return
 	}
@@ -60,7 +62,7 @@ func (s *SkillConfigController) CreateSkillConfig(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
-	rec, err := s.interactor.CreateSkillConfig(reqBody)
+	rec, err := s.Interactor.CreateSkillConfig(reqBody)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{
 			"error": fmt.Sprintf("error: %s", err.Error())},
@@ -76,7 +78,7 @@ func (s *SkillConfigController) CreateSkillConfigs(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
-	err := s.interactor.CreateSkillConfigs(reqBody)
+	err := s.Interactor.CreateSkillConfigs(reqBody)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{
 			"error": err.Error()},
@@ -88,10 +90,10 @@ func (s *SkillConfigController) CreateSkillConfigs(c *gin.Context) {
 
 func (s *SkillConfigController) DeleteById(c *gin.Context) {
 	id := c.Param("id")
-	err := s.interactor.DeleteById(id)
+	err := s.Interactor.DeleteById(id)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{
-			"error": fmt.Sprintf("database error: %s", err.Error())},
+			"error": fmt.Sprintf("%s", err.Error())},
 		)
 		return
 	}
