@@ -4,7 +4,8 @@ import (
 	"fmt"
 	"github.com/gin-gonic/gin"
 	"github.com/golang-jwt/jwt"
-	"github.com/orpheus/exp/auth"
+	"github.com/orpheus/exp/api/ginhttp/auth"
+	"github.com/orpheus/exp/system/sysauth"
 	"net/http"
 	"strings"
 )
@@ -28,7 +29,7 @@ func AuthGuardian(guardian auth.PermissionGuardian) gin.HandlerFunc {
 		}
 		tokenString := strings.TrimSpace(authHeader[len(BearerSchema):])
 
-		token, err := auth.JWTAuthService().ValidateToken(tokenString)
+		token, err := sysauth.JWTAuthService().ValidateToken(tokenString)
 		if err != nil {
 			fmt.Println(err)
 			c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"error": err.Error()})

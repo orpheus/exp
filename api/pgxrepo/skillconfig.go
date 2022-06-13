@@ -1,33 +1,29 @@
-package repository
+package pgxrepo
 
 import (
 	"context"
 	"fmt"
-	"github.com/jackc/pgx/v4/pgxpool"
+	"github.com/orpheus/exp/api"
+	"github.com/orpheus/exp/core"
 	"log"
 	"strings"
 )
 
-type SkillConfig struct {
-	Id          string `json:"id" binding:"required"`
-	Name        string `json:"name" binding:"required"`
-	Description string `json:"description"`
+type SkillConfigRepository struct {
+	DB     PgxConn
+	Logger api.Logger
 }
 
-type SkillConfigRepo struct {
-	DB *pgxpool.Pool
-}
-
-func (s *SkillConfigRepo) FindAll() []SkillConfig {
+func (s *SkillConfigRepository) FindAll() []core.SkillConfig {
 	skillConfigRows, err := s.DB.Query(context.Background(), "select * from skill_config")
 	if err != nil {
 		panic(err)
 	}
 	defer skillConfigRows.Close()
 
-	var skillConfigs []SkillConfig
+	var skillConfigs []core.SkillConfig
 	for skillConfigRows.Next() {
-		r := new(SkillConfig)
+		r := new(core.SkillConfig)
 		err := skillConfigRows.Scan(&r.Id, &r.Name, &r.Description)
 		if err != nil {
 			log.Fatal(err)
@@ -42,8 +38,8 @@ func (s *SkillConfigRepo) FindAll() []SkillConfig {
 	return skillConfigs
 }
 
-func (s *SkillConfigRepo) FindById(id string) (SkillConfig, error) {
-	r := new(SkillConfig)
+func (s *SkillConfigRepository) FindById(id string) (core.SkillConfig, error) {
+	r := new(core.SkillConfig)
 	err := s.DB.QueryRow(
 		context.Background(),
 		"select * from skill_config where id = $1", id).
@@ -51,10 +47,10 @@ func (s *SkillConfigRepo) FindById(id string) (SkillConfig, error) {
 	return *r, err
 }
 
-func (s *SkillConfigRepo) CreateOne(skillConfig SkillConfig) (SkillConfig, error) {
+func (s *SkillConfigRepository) CreateOne(skillConfig core.SkillConfig) (core.SkillConfig, error) {
 	fmtStr := "insert into skill_config (id, name, description) VALUES ('%s', '%s', '%s') RETURNING id, name, description"
 	sql := fmt.Sprintf(fmtStr, skillConfig.Id, skillConfig.Name, skillConfig.Description)
-	r := new(SkillConfig)
+	r := new(core.SkillConfig)
 	err := s.DB.QueryRow(context.Background(), sql).
 		Scan(&r.Id, &r.Name, &r.Description)
 
@@ -62,7 +58,7 @@ func (s *SkillConfigRepo) CreateOne(skillConfig SkillConfig) (SkillConfig, error
 	return *r, err
 }
 
-func (s *SkillConfigRepo) CreateMany(skillConfigs []SkillConfig) (string, error) {
+func (s *SkillConfigRepository) CreateMany(skillConfigs []core.SkillConfig) error {
 	// Create query string for insert many
 	sqlBase := "insert into skill_config (id, name, description) VALUES %s RETURNING id, name, description"
 	var sqlValues []string
@@ -73,17 +69,17 @@ func (s *SkillConfigRepo) CreateMany(skillConfigs []SkillConfig) (string, error)
 	sqlValuesJoined := strings.Join(sqlValues, ", ")
 	sql := fmt.Sprintf(sqlBase, sqlValuesJoined)
 
-	// Query db
-	sqlResult, err := s.DB.Exec(context.Background(), sql)
+	// Query pgx
+	_, err := s.DB.Exec(context.Background(), sql)
 	if err != nil {
-		return sqlResult.String(), err
+		return err
 	}
-	return sqlResult.String(), nil
+	return nil
 }
 
-func (s *SkillConfigRepo) DeleteById(id string) (string, error) {
+func (s *SkillConfigRepository) DeleteById(id string) error {
 	sql := fmt.Sprintf("delete from skill_config where id = '%s'", id)
 	fmt.Println(sql)
 	_, err := s.DB.Query(context.Background(), sql)
-	return fmt.Sprintf("Deleted SkillConfig with id: %s", id), err
+	return err
 }
