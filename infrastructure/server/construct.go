@@ -3,13 +3,15 @@ package server
 import (
 	"github.com/gin-gonic/gin"
 	"github.com/jackc/pgx/v4/pgxpool"
-	"github.com/orpheus/exp/domain"
-	"github.com/orpheus/exp/interfaces/ginhttp"
-	"github.com/orpheus/exp/interfaces/ginhttp/auth"
-	"github.com/orpheus/exp/interfaces/ginhttp/middleware"
-	"github.com/orpheus/exp/interfaces/repository"
-	"github.com/orpheus/exp/usecases"
-	authuc "github.com/orpheus/exp/usecases/auth"
+	"github.com/orpheus/exp/api/ginhttp"
+	"github.com/orpheus/exp/api/ginhttp/auth"
+	"github.com/orpheus/exp/api/ginhttp/middleware"
+	"github.com/orpheus/exp/api/pgxrepo"
+	"github.com/orpheus/exp/core"
+	"github.com/orpheus/exp/system/sysauth"
+
+	"github.com/orpheus/exp/system"
+
 	"log"
 )
 
@@ -27,7 +29,7 @@ func Construct(r *gin.Engine, conn *pgxpool.Pool) {
 	tmpLogger := &TmpLogger{}
 
 	permissionGuardian := auth.MakePermissionGuardian()
-	jwtService := authuc.JWTAuthService()
+	jwtService := sysauth.JWTAuthService()
 
 	v1Router := r.Group("/api")
 	v1Router.Use(middleware.AuthGuardian(permissionGuardian))
@@ -38,60 +40,60 @@ func Construct(r *gin.Engine, conn *pgxpool.Pool) {
 	})
 
 	// Repositories
-	roleRepository := &repository.RoleRepository{
+	roleRepository := &pgxrepo.RoleRepository{
 		DB:     conn,
 		Logger: tmpLogger,
 	}
-	permissionRepository := &repository.PermissionRepository{
+	permissionRepository := &pgxrepo.PermissionRepository{
 		DB:     conn,
 		Logger: tmpLogger,
 	}
-	skillConfigRepository := &repository.SkillConfigRepository{
+	skillConfigRepository := &pgxrepo.SkillConfigRepository{
 		DB:     conn,
 		Logger: tmpLogger,
 	}
-	skillRepository := &repository.SkillRepository{
+	skillRepository := &pgxrepo.SkillRepository{
 		DB:     conn,
 		Logger: tmpLogger,
 	}
-	skillerRepository := &repository.SkillerRepository{
+	skillerRepository := &pgxrepo.SkillerRepository{
 		DB:     conn,
 		Logger: tmpLogger,
 	}
 
 	// Interactors
-	roleInteractor := &authuc.RoleInteractor{
+	roleInteractor := &sysauth.RoleInteractor{
 		RoleRepository: roleRepository,
 		Logger:         tmpLogger,
 	}
 
-	permissionInteractor := &authuc.PermissionInteractor{
+	permissionInteractor := &sysauth.PermissionInteractor{
 		PermissionRepository: permissionRepository,
 		Logger:               tmpLogger,
 	}
 
-	skillConfigInteractor := &usecases.SkillConfigInteractor{
+	skillConfigInteractor := &system.SkillConfigInteractor{
 		Repo:   skillConfigRepository,
 		Logger: tmpLogger,
 	}
 
-	skillInteractor := &usecases.SkillInteractor{
+	skillInteractor := &system.SkillInteractor{
 		SkillRepository: skillRepository,
-		Policy:          &domain.SkillPolicyEnforcer{},
+		Policy:          &core.SkillPolicyEnforcer{},
 		Logger:          tmpLogger,
 	}
 
-	skillerInteractor := &usecases.SkillerInteractor{
+	skillerInteractor := &system.SkillerInteractor{
 		Repo:   skillerRepository,
 		Logger: tmpLogger,
 	}
 
-	userInteractor := &authuc.UserInteractor{
+	userInteractor := &sysauth.UserInteractor{
 		SkillerInteractor: skillerInteractor,
 		Logger:            tmpLogger,
 	}
 
-	signonInteractor := &authuc.SignOnInteractor{
+	signonInteractor := &sysauth.SignOnInteractor{
 		UserRepository: userInteractor,
 		RoleRepository: roleRepository,
 		JWTService:     jwtService,
