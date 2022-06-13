@@ -7,7 +7,7 @@ design model.
 Note here the difference between the **system** and **domain** layer. A `Skiller` is a domain object, is a reference to
 a particular type of person captured in relation to our product. A `User`, on the other hand, is a system-related entity
 used for system-related operations like authentication and authorization. A `Skiller` does not care about permissions,
-just about the field related to its domain. A `User` needs to know about its permissions, its role, and the relevant
+just about the fields related to its domain. A `User` needs to know about its permissions, its role, and the relevant
 domain fields.
 
 I call this package `system` and not `services`, `application`, or `tech` because I feel it brings the focus to a more

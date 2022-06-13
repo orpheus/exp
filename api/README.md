@@ -1,13 +1,13 @@
 # api
 
-Application program interface. This folder contains the interface implementations for the core and system
-layers to communicate with the outside world, i.e. via http, rpc, binary, sockets, etc. 
+`Application Program Interfaces`. This folder contains the interface implementations for the `core` and `system`
+layers to communicate with the outside world, i.e. http, rpc, binary, sockets, etc. 
 
-Your core+system layers will define interfaces about how they ought to be used 
-and your api layer will build implementations on top of them.
+The `core` & `system` layers will define interfaces about how they ought to be used 
+and your api layer will build implementations for them.
 
-Decoupling the API from the system logic should allow us to change system and domain logic 
-without affecting API logic and vice versa. 
+Decoupling the API from the system logic allows us to change the system and domain 
+without affecting the API and vice versa. 
 
 This is also known as the `interfaces` layer according to the `clean architecture` design philosophy.
 
