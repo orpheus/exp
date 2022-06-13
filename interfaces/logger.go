@@ -1,5 +1,6 @@
 package interfaces
 
 type Logger interface {
-	Log(message string) error
+	Log(v ...interface{})
+	Logf(format string, v ...interface{})
 }

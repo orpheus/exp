@@ -21,7 +21,7 @@ func (s *SkillInteractor) FindAllSkills() []domain.Skill {
 	skills, err := s.SkillRepository.FindAll()
 	if err != nil {
 		message := fmt.Errorf("%s", err.Error())
-		_ = s.Logger.Log(message.Error())
+		s.Logger.Log(message.Error())
 		return nil
 	}
 	return skills
@@ -31,7 +31,7 @@ func (s *SkillInteractor) FindSkillById(id uuid.UUID) (domain.Skill, error) {
 	skill, err := s.SkillRepository.FindById(id)
 	if err != nil {
 		err = fmt.Errorf("%s", err.Error())
-		_ = s.Logger.Log(err.Error())
+		s.Logger.Log(err.Error())
 		return skill, err
 	}
 	return skill, nil
@@ -42,7 +42,7 @@ func (s *SkillInteractor) CreateSkill(skill domain.Skill, userId uuid.UUID) (dom
 	exists, err := s.SkillRepository.ExistsByUserId(id, userId)
 	if err != nil {
 		message := fmt.Errorf("%s", err.Error())
-		_ = s.Logger.Log(message.Error())
+		s.Logger.Log(message.Error())
 	}
 
 	if exists {

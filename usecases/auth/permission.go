@@ -1,7 +1,6 @@
 package usecases
 
 import (
-	"fmt"
 	"github.com/orpheus/exp/interfaces"
 	"time"
 )
@@ -52,7 +51,7 @@ func (p *PermissionInteractor) EnforcePermissions(pg PermissionGetter) {
 		panic(err)
 	}
 
-	_ = p.Logger.Log(fmt.Sprintf("%s", existingPermissions))
+	p.Logger.Logf("%s", existingPermissions)
 
 	mappedPermissions := make(map[string]bool)
 	for _, v := range existingPermissions {
