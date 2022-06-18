@@ -11,7 +11,7 @@ type SkillConfigInteractor struct {
 	Logger api.Logger
 }
 
-func (s *SkillConfigInteractor) FindAllSkillConfigs() []core.SkillConfig {
+func (s *SkillConfigInteractor) FindAllSkillConfigs() ([]core.SkillConfig, error) {
 	return s.Repo.FindAll()
 }
 

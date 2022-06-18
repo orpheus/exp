@@ -3,7 +3,7 @@ package core
 // SkillConfigRepository defines the repository methods to
 // interact with our entity.
 type SkillConfigRepository interface {
-	FindAll() []SkillConfig
+	FindAll() ([]SkillConfig, error)
 	FindById(id string) (SkillConfig, error)
 	CreateOne(skillConfig SkillConfig) (SkillConfig, error)
 	CreateMany(skillConfigs []SkillConfig) error

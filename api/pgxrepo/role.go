@@ -47,6 +47,14 @@ func (r *RoleRepository) FindById(id uuid.UUID) (sysauth.Role, error) {
 	return role, err
 }
 
+func (r *RoleRepository) FindByName(name string) (sysauth.Role, error) {
+	sql := "select * from role where name = $1"
+	var role sysauth.Role
+	err := r.DB.QueryRow(context.Background(), sql, name).
+		Scan(&role.Id, &role.Name, &role.Permissions, &role.DateCreated, &role.DateModified)
+	return role, err
+}
+
 func (r *RoleRepository) CreateOne(role sysauth.Role) (sysauth.Role, error) {
 	ds := "insert into role (name, permissions) " +
 		"VALUES ($1, $2) " +

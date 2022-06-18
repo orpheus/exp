@@ -31,11 +31,12 @@ func (s *SkillRepository) FindAll() ([]core.Skill, error) {
 		}
 		skills = append(skills, r)
 	}
+
 	if err := rows.Err(); err != nil {
-		log.Fatal(err)
+		return nil, err
 	}
 
-	fmt.Printf("Fetched %d skills\n", len(skills))
+	s.Logger.Logf("Fetched %d skills\n", len(skills))
 	if len(skills) == 0 {
 		return []core.Skill{}, nil
 	}

@@ -2,7 +2,9 @@ package pgxrepo
 
 import (
 	"context"
+	"errors"
 	"fmt"
+	"github.com/jackc/pgx/v4"
 	"github.com/orpheus/exp/api"
 	"github.com/orpheus/exp/core"
 	"log"
@@ -14,10 +16,10 @@ type SkillConfigRepository struct {
 	Logger api.Logger
 }
 
-func (s *SkillConfigRepository) FindAll() []core.SkillConfig {
+func (s *SkillConfigRepository) FindAll() ([]core.SkillConfig, error) {
 	skillConfigRows, err := s.DB.Query(context.Background(), "select * from skill_config")
 	if err != nil {
-		panic(err)
+		return nil, err
 	}
 	defer skillConfigRows.Close()
 
@@ -30,12 +32,16 @@ func (s *SkillConfigRepository) FindAll() []core.SkillConfig {
 		}
 		skillConfigs = append(skillConfigs, *r)
 	}
+
 	if err := skillConfigRows.Err(); err != nil {
-		log.Fatal(err)
+		return nil, err
 	}
 
-	fmt.Println(skillConfigs)
-	return skillConfigs
+	if len(skillConfigs) == 0 {
+		return []core.SkillConfig{}, nil
+	}
+
+	return skillConfigs, nil
 }
 
 func (s *SkillConfigRepository) FindById(id string) (core.SkillConfig, error) {
@@ -44,6 +50,9 @@ func (s *SkillConfigRepository) FindById(id string) (core.SkillConfig, error) {
 		context.Background(),
 		"select * from skill_config where id = $1", id).
 		Scan(&r.Id, &r.Name, &r.Description)
+	if err == pgx.ErrNoRows {
+		return *r, errors.New(fmt.Sprintf("skill (%s) not found", id))
+	}
 	return *r, err
 }
 

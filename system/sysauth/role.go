@@ -16,6 +16,7 @@ type RoleInteractor struct {
 type RoleRepository interface {
 	FindAll() []Role
 	FindById(id uuid.UUID) (Role, error)
+	FindByName(string) (Role, error)
 	CreateOne(role Role) (Role, error)
 	DeleteById(id uuid.UUID) error
 }
@@ -35,6 +36,10 @@ func (r *RoleInteractor) FindAll() []Role {
 
 func (r *RoleInteractor) FindById(id uuid.UUID) (Role, error) {
 	return r.RoleRepository.FindById(id)
+}
+
+func (r *RoleInteractor) FindByName(name string) (Role, error) {
+	return r.RoleRepository.FindByName(name)
 }
 
 func (r *RoleInteractor) CreateOne(role Role) (Role, error) {
