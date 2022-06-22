@@ -94,10 +94,11 @@ func Construct(r *gin.Engine, conn *pgxpool.Pool) {
 	}
 
 	signonInteractor := &sysauth.SignOnInteractor{
-		UserRepository: userInteractor,
-		RoleRepository: roleRepository,
-		JWTService:     jwtService,
-		Logger:         tmpLogger,
+		UserRepository:    userInteractor,
+		RoleRepository:    roleRepository,
+		SkillerRepository: skillerRepository,
+		JWTService:        jwtService,
+		Logger:            tmpLogger,
 	}
 
 	// Controllers
@@ -131,11 +132,6 @@ func Construct(r *gin.Engine, conn *pgxpool.Pool) {
 		Logger:     tmpLogger,
 	}
 	skillController.RegisterRoutes(v1Router)
-
-	userController := ginhttp.UserController{
-		Interactor: userInteractor,
-	}
-	userController.RegisterRoutes(v1Router)
 
 	adminRoleId := roleInteractor.CreateAdminRole()
 	userInteractor.CreateAdminUser(adminRoleId)

@@ -6,6 +6,16 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+## [2022-06-21]
+### Changed
+- cleaned up `sysauth.user`: removed `LoginUser` and most the `UserInteractor` functions
+  - the idea is now that the `auth.User` struct should only be used to create and modify system users
+  - `auth.User` should not be fetched by client except returned after a Login/Signup
+- `auth.User` now returns the full `Role` object to include permissions for client on login/signup
+
+### Removed
+- UserController (ginhttp api)
+- All UserRepository/Interactor methods except `CreateOne`
 
 ## [2022-06-18]
 ### Added

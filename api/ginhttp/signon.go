@@ -14,8 +14,8 @@ type SignOnController struct {
 }
 
 type SignOnInteractor interface {
-	Login(usernameOrEmail string, password string) (sysauth.User, error)
-	SignUp(user sysauth.RegisterUser) (sysauth.User, error)
+	Login(usernameOrEmail string, password string) (*sysauth.User, error)
+	SignUp(user sysauth.RegisterUser) (*sysauth.User, error)
 }
 
 // RegisterRoutes registers a route group for login and signup apis

@@ -23,11 +23,16 @@ type RoleRepository interface {
 
 // Role Entity
 type Role struct {
-	Id           uuid.UUID `json:"id"`
-	Name         string    `json:"name" binding:"required"`
-	Permissions  []string  `json:"permissions" binding:"required"`
-	DateCreated  time.Time `json:"dateCreated"`
-	DateModified time.Time `json:"dateModified"`
+	Id           uuid.UUID  `json:"id"`
+	Name         string     `json:"name" binding:"required"`
+	Permissions  []string   `json:"permissions" binding:"required"`
+	DateCreated  *time.Time `json:"dateCreated,omitempty"`
+	DateModified *time.Time `json:"dateModified,omitempty"`
+}
+
+func (r *Role) toDTO() {
+	r.DateCreated = nil
+	r.DateModified = nil
 }
 
 func (r *RoleInteractor) FindAll() []Role {
