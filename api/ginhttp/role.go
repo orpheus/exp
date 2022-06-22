@@ -26,8 +26,8 @@ type RoleInteractor interface {
 func (r *RoleController) RegisterRoutes(router *gin.RouterGroup) {
 	role := router.Group("/role")
 	{
-		role.GET("/", r.FindAll)
-		role.POST("/", r.CreateOne)
+		role.GET("", r.FindAll)
+		role.POST("", r.CreateOne)
 		role.GET("/:id", r.FindById)
 		role.DELETE("/:id", r.DeleteById)
 	}

@@ -27,15 +27,15 @@ type SkillConfigInteractor interface {
 func (s *SkillConfigController) RegisterRoutes(router *gin.RouterGroup) {
 	skillConfig := router.Group("/skillConfig")
 	{
-		skillConfig.GET("/", s.FindAllSkillConfigs)
-		skillConfig.POST("/", s.CreateSkillConfig)
+		skillConfig.GET("", s.FindAllSkillConfigs)
+		skillConfig.POST("", s.CreateSkillConfig)
 		skillConfig.GET("/:id", s.FindSkillConfigById)
 		skillConfig.DELETE("/:id", s.DeleteById)
 	}
 
-	skillConfigs := router.Group("skillConfigs")
+	skillConfigs := router.Group("/skillConfigs")
 	{
-		skillConfigs.POST("/", s.CreateSkillConfigs)
+		skillConfigs.POST("", s.CreateSkillConfigs)
 	}
 }
 

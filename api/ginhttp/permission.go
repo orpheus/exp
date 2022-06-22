@@ -23,7 +23,7 @@ type PermissionInteractor interface {
 func (p *PermissionController) RegisterRoutes(router *gin.RouterGroup) {
 	permissions := router.Group("/permissions")
 	{
-		permissions.GET("/", p.FindAll)
+		permissions.GET("", p.FindAll)
 	}
 }
 

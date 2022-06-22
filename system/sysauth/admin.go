@@ -25,8 +25,8 @@ func (r *RoleInteractor) CreateAdminRole() uuid.UUID {
 }
 
 func (u *UserInteractor) CreateAdminUser(adminRoleId uuid.UUID) {
-	_, err := u.FindByUsername(admin)
-	if err != nil {
+	exists := u.ExistsByUsername(admin)
+	if exists == false {
 		// The second argument is the cost of hashing, which we arbitrarily set as 8
 		// (this value can be more or less, depending on the computing power you wish to utilize)
 		hashedPassword, err := bcrypt.GenerateFromPassword([]byte(admin), 8)
