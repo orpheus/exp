@@ -14,8 +14,8 @@ type SignOnController struct {
 }
 
 type SignOnInteractor interface {
-	Login(username string, password string) (sysauth.User, error)
-	SignUp(user sysauth.User) (sysauth.User, error)
+	Login(usernameOrEmail string, password string) (sysauth.User, error)
+	SignUp(user sysauth.RegisterUser) (sysauth.User, error)
 }
 
 // RegisterRoutes registers a route group for login and signup apis
@@ -27,15 +27,15 @@ func (s *SignOnController) RegisterRoutes(router *gin.RouterGroup) {
 }
 
 func (s *SignOnController) Login(c *gin.Context) {
-	username, password, hasAuth := c.Request.BasicAuth()
+	usernameOrEmail, password, hasAuth := c.Request.BasicAuth()
 	if !hasAuth {
 		c.JSON(http.StatusUnauthorized, "Missing required basic auth headers")
 		return
 	}
 
-	user, err := s.Interactor.Login(username, password)
+	user, err := s.Interactor.Login(usernameOrEmail, password)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		c.JSON(http.StatusBadRequest, err.Error())
 		return
 	}
 
@@ -43,17 +43,17 @@ func (s *SignOnController) Login(c *gin.Context) {
 }
 
 func (s *SignOnController) SignUp(c *gin.Context) {
-	var newUser sysauth.User
+	var newUser sysauth.RegisterUser
 
 	err := c.ShouldBind(&newUser)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		c.JSON(http.StatusBadRequest, err.Error())
 		return
 	}
 
 	user, err := s.Interactor.SignUp(newUser)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		c.JSON(http.StatusBadRequest, err.Error())
 		return
 	}
 

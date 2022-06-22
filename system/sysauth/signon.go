@@ -19,10 +19,13 @@ type SignOnRepository interface {
 	SignUp(user User) (User, error)
 }
 
-func (s *SignOnInteractor) Login(username string, password string) (User, error) {
-	user, err := s.UserRepository.FindByUsername(username)
+func (s *SignOnInteractor) Login(usernameOrEmail string, password string) (User, error) {
+	user, err := s.UserRepository.FindByUsername(usernameOrEmail)
 	if err != nil {
-		return User{}, err
+		user, err = s.UserRepository.FindByEmail(usernameOrEmail)
+		if err != nil {
+			return User{}, err
+		}
 	}
 
 	// Compare the stored hashed password, with the hashed version of the password that was received
@@ -44,14 +47,28 @@ func (s *SignOnInteractor) Login(username string, password string) (User, error)
 	return user, nil
 }
 
-func (s *SignOnInteractor) SignUp(user User) (User, error) {
+func (s *SignOnInteractor) SignUp(user RegisterUser) (User, error) {
 	if len(user.Password) == 0 {
 		return User{}, errors.New("missing password")
 	}
 
-	_, err := s.RoleRepository.FindById(user.RoleId)
-	if err != nil {
-		return User{}, errors.New(fmt.Sprintf("Role %s does not exist", user.RoleId))
+	if user.RoleId.IsNil() && user.RoleName == "" {
+		return User{}, errors.New("must provide either `roleId` or `roleName`")
+	}
+
+	if !user.RoleId.IsNil() {
+		_, err := s.RoleRepository.FindById(user.RoleId)
+		if err != nil {
+			return User{}, errors.New(fmt.Sprintf("Role id %s does not exist", user.RoleId))
+		}
+	}
+
+	if user.RoleName != "" {
+		role, err := s.RoleRepository.FindByName(user.RoleName)
+		if err != nil {
+			return User{}, errors.New(fmt.Sprintf("Role name %s does not exist", user.RoleName))
+		}
+		user.RoleId = role.Id
 	}
 
 	// The second argument is the cost of hashing, which we arbitrarily set as 8

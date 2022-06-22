@@ -28,6 +28,5 @@ func (s *SkillerInteractor) FindByUsername(username string) (core.Skiller, error
 }
 
 func (s *SkillerInteractor) CreateOne(skiller core.Skiller) (core.Skiller, error) {
-	// TODO(check if already exists)
 	return s.Repo.CreateOne(skiller)
 }

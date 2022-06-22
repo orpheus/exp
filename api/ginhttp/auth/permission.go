@@ -19,8 +19,8 @@ func MakePermissionGuardian() *Guardian {
 	// These are ordered, put more specific endpoints higher than less specific ones
 	restrictions := []Restriction{
 		restrict("skill/addTxp", map[string]string{"POST": "exp.skill.addTxp"}),
-		restrictAllSpecial("skills?", "exp.skill", map[string]string{"DELETE": "admin.skill.delete"}),
 		restrictAll("skillConfigs?", "exp.skillConfig"),
+		restrictAllSpecial("skills?", "exp.skill", map[string]string{"DELETE": "admin.skill.delete"}),
 		restrictAll("users?", "exp.user"),
 		restrictAll("role?", "exp.role"),
 	}

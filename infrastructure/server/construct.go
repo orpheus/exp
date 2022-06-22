@@ -136,4 +136,7 @@ func Construct(r *gin.Engine, conn *pgxpool.Pool) {
 		Interactor: userInteractor,
 	}
 	userController.RegisterRoutes(v1Router)
+
+	adminRoleId := roleInteractor.CreateAdminRole()
+	userInteractor.CreateAdminUser(adminRoleId)
 }

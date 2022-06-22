@@ -16,7 +16,22 @@ type User struct {
 	Password string    `json:"password,omitempty"`
 	Email    string    `json:"email" binding:"required"`
 	RoleId   uuid.UUID `json:"roleId,omitempty" binding:"required"`
+	RoleName string    `json:"role,omitempty" binding:"required"`
 	JWT      string    `json:"accessToken,omitempty"`
+}
+
+type RegisterUser struct {
+	Username string    `json:"username" binding:"required"`
+	Password string    `json:"password"  binding:"required"`
+	Email    string    `json:"email" binding:"required"`
+	RoleId   uuid.UUID `json:"roleId"`
+	RoleName string    `json:"roleName"`
+}
+
+type LoginUser struct {
+	Email    string `json:"email"`
+	Username string `json:"username"`
+	Password string `json:"password"  binding:"required"`
 }
 
 // UserInteractor implements the UserRepository for use in signon logic.
@@ -37,7 +52,7 @@ type UserRepository interface {
 	FindById(id uuid.UUID) (User, error)
 	FindByUsername(username string) (User, error)
 	FindByEmail(email string) (User, error)
-	CreateOne(user User) (User, error)
+	CreateOne(user RegisterUser) (User, error)
 }
 
 func (u *User) RemovePassword() {
@@ -70,7 +85,7 @@ func (u *UserInteractor) FindById(id uuid.UUID) (User, error) {
 	return User{
 		Id:       skiller.Id,
 		Username: skiller.Username,
-		Password: "",
+		Password: skiller.Password,
 		Email:    skiller.Email,
 		RoleId:   skiller.RoleId,
 	}, nil
@@ -98,15 +113,14 @@ func (u *UserInteractor) FindByEmail(email string) (User, error) {
 	return User{
 		Id:       skiller.Id,
 		Username: skiller.Username,
-		Password: "",
+		Password: skiller.Password,
 		Email:    skiller.Email,
 		RoleId:   skiller.RoleId,
 	}, nil
 }
 
-func (u *UserInteractor) CreateOne(user User) (User, error) {
+func (u *UserInteractor) CreateOne(user RegisterUser) (User, error) {
 	skiller, err := u.SkillerInteractor.CreateOne(core.Skiller{
-		Id:           user.Id,
 		Email:        user.Email,
 		Username:     user.Username,
 		Password:     user.Password,

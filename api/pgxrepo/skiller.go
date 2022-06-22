@@ -46,7 +46,7 @@ func (r *SkillerRepository) FindByUsername(username string) (core.Skiller, error
 		Scan(&u.Id, &u.Username, &u.Password, &u.Email, &u.RoleId, &u.DateCreated, &u.DateModified)
 
 	if err != nil {
-		err = fmt.Errorf("db scan failed for Skiller in repository.skiller.FindByUsername: %s", err.Error())
+		err = fmt.Errorf("user (%s) not found", username)
 		r.Logger.Log(err.Error())
 		return core.Skiller{}, err
 	}
@@ -59,7 +59,7 @@ func (r *SkillerRepository) FindByEmail(email string) (core.Skiller, error) {
 
 	var u core.Skiller
 	err := r.DB.QueryRow(context.Background(), ds, email).
-		Scan(&u.Id, &u.Username, &u.Email, &u.RoleId, &u.DateCreated, &u.DateModified)
+		Scan(&u.Id, &u.Username, &u.Password, &u.Email, &u.RoleId, &u.DateCreated, &u.DateModified)
 
 	r.Logger.Log(fmt.Sprintf("%s", u))
 
@@ -71,7 +71,7 @@ func (r *SkillerRepository) FindById(id uuid.UUID) (core.Skiller, error) {
 
 	var u core.Skiller
 	err := r.DB.QueryRow(context.Background(), ds, id).
-		Scan(&u.Id, &u.Username, &u.Email, &u.RoleId, &u.DateCreated, &u.DateModified)
+		Scan(&u.Id, &u.Username, &u.Password, &u.Email, &u.RoleId, &u.DateCreated, &u.DateModified)
 
 	r.Logger.Log(fmt.Sprintf("%s", u))
 

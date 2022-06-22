@@ -14,12 +14,13 @@ type SkillerRepository interface {
 }
 
 // Skiller is the entity which acts in the system and has skills.
+// The Sys attributes are here until I understand how to split out
+// a Skiller from a User
 type Skiller struct {
-	Id       uuid.UUID `json:"id"`
-	Email    string    `json:"email" binding:"required"`
-	Username string    `json:"username" binding:"required"`
-	Password string    `json:"password,omitempty"`
-	// Here until I understand how to separate a `Skiller` and a `User`
+	Id           uuid.UUID `json:"id"`
+	Email        string    `json:"email" binding:"required"`
+	Username     string    `json:"username" binding:"required"`
+	Password     string    `json:"password,omitempty"`
 	RoleId       uuid.UUID `json:"roleId,omitempty" binding:"required"`
 	DateCreated  time.Time `json:"dateCreated"`
 	DateModified time.Time `json:"dateModified"`

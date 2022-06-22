@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2022-06-18]
+### Added
+- create admin role/user on startup
+- login by email __or username
+
+## [2022-06-13]
+### Changed
+- refactored app to use 'Clean Arch' based on Robert Martin's Clean design philosophy
+  - figured I'd try it out. so far I love the separation of the domain
+
+## [2022-03-22]
 ### Added
 - db postgres setup (pgx)
 - router setup (gin)
@@ -20,9 +31,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - restrict adding txp more than time diff of last add date
 - custom `migrate.go` script to load sql migrations into db
 
-### Changed
-- refactored app to use 'Clean Arch' based on Robert Martin's Clean design philosophy
-    - figured I'd try it out. so far I love the separation of the domain
 ### Fixed
 ### Removed
 

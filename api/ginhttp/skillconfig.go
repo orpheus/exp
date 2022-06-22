@@ -17,7 +17,7 @@ type SkillConfigController struct {
 // SkillConfigInteractor Service Interface.
 // TODO("Why do we define this here and not in the domain layer?")
 type SkillConfigInteractor interface {
-	FindAllSkillConfigs() []core.SkillConfig
+	FindAllSkillConfigs() ([]core.SkillConfig, error)
 	FindSkillConfigById(id string) (core.SkillConfig, error)
 	CreateSkillConfig(skillConfig core.SkillConfig) (core.SkillConfig, error)
 	CreateSkillConfigs(skillConfigs []core.SkillConfig) error
@@ -40,7 +40,11 @@ func (s *SkillConfigController) RegisterRoutes(router *gin.RouterGroup) {
 }
 
 func (s *SkillConfigController) FindAllSkillConfigs(c *gin.Context) {
-	skillConfigs := s.Interactor.FindAllSkillConfigs()
+	skillConfigs, err := s.Interactor.FindAllSkillConfigs()
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, err.Error())
+		return
+	}
 	c.IndentedJSON(http.StatusOK, skillConfigs)
 }
 

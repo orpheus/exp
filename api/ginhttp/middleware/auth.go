@@ -32,7 +32,7 @@ func AuthGuardian(guardian auth.PermissionGuardian) gin.HandlerFunc {
 		token, err := sysauth.JWTAuthService().ValidateToken(tokenString)
 		if err != nil {
 			fmt.Println(err)
-			c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+			c.AbortWithStatusJSON(http.StatusUnauthorized, "Invalid auth token")
 			return
 		}
 
@@ -40,7 +40,7 @@ func AuthGuardian(guardian auth.PermissionGuardian) gin.HandlerFunc {
 		fmt.Println(claims, c.Request.RequestURI, c.Request.Method)
 		requiredPermission := guardian.GetRequiredPermission(c.Request.RequestURI, c.Request.Method)
 		if requiredPermission == "" {
-			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "Could not find required permission"})
+			c.AbortWithStatusJSON(http.StatusUnauthorized, "Could not find required permission")
 			return
 		}
 
@@ -54,7 +54,7 @@ func AuthGuardian(guardian auth.PermissionGuardian) gin.HandlerFunc {
 		}
 
 		if !hasPermission {
-			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": fmt.Sprintf("User does not have the following permission: %s", requiredPermission)})
+			c.AbortWithStatusJSON(http.StatusUnauthorized, fmt.Sprintf("User does not have the following permission: %s", requiredPermission))
 			return
 		}
 
